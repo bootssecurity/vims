@@ -32,11 +32,14 @@ export declare const defaultTestModules: readonly [import("@vims/framework").Vim
 export declare const defaultTestProviders: readonly [import("@vims/framework").VimsProviderDefinition<{
     key: string;
     url: string;
-    createClient: typeof import("@vims/database-postgres").createPostgresClient;
+    readonly manager: any;
+    readonly orm: any;
 }>, import("@vims/framework").VimsProviderDefinition<{
     key: string;
-    url: string;
-    createClient: typeof import("@vims/cache-redis").createRedisCacheClient;
+    get(namespace: string, key: string): Promise<any>;
+    set(namespace: string, key: string, data: any, ttl?: number): Promise<void>;
+    invalidate(namespace: string, keys?: string[]): Promise<void>;
+    destroy(): Promise<void>;
 }>, import("@vims/framework").VimsProviderDefinition<{
     key: string;
     bus: {

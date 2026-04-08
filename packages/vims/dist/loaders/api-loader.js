@@ -149,7 +149,10 @@ export class ApiLoader {
             // e.g. rootDir = /src/api, filePath = /src/api/admin/products/route.ts
             //    → relativeDirParts = ["admin", "products"]
             //    → urlPath = /admin/products
-            const relativeDir = relative(rootDir, filePath).replace(/[/\\][^/\\]+$/, ""); // strip filename
+            const relPath = relative(rootDir, filePath);
+            const relativeDir = relPath.includes("/") || relPath.includes("\\")
+                ? relPath.replace(/[/\\][^/\\]+$/, "")
+                : "";
             const urlParts = relativeDir
                 .split(/[/\\]/)
                 .map((part) => part.replace(/^\[(.+)\]$/, ":$1")); // [id] → :id

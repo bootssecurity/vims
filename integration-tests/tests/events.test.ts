@@ -40,11 +40,16 @@ describe("Architecture Parity: Redis BullMQ Workers", () => {
       payload: { id: testId },
     });
 
-    // 3. Wait for Worker node to async process and run subscriber function
-    await new Promise((r) => setTimeout(r, 2000));
+    // 3. Wait for Worker node to async process and run subscriber function (with retry)
+    let afterwards: any = null;
+    const maxRetries = 10;
+    for (let i = 0; i < maxRetries; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      afterwards = await cache.get("test-namespace", `event-processed-${testId}`);
+      if (afterwards) break;
+    }
 
     // 4. Trace the results executed by the async subscriber
-    const afterwards = await cache.get("test-namespace", `event-processed-${testId}`);
     expect(afterwards).toEqual({ fired: true });
   });
 });

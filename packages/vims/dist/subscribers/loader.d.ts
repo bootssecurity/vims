@@ -1,4 +1,4 @@
-import type { VimsSubscriberConfig, VimsSubscriberArgs, VimsContainer } from "../types/index";
+import type { VimsSubscriberConfig, VimsSubscriberArgs } from "../types/index";
 type SubscriberEntry = {
     handler: (args: VimsSubscriberArgs<any>) => Promise<void>;
     config: VimsSubscriberConfig;
@@ -34,7 +34,7 @@ export declare class SubscriberLoader {
     private readonly pluginOptions;
     private readonly entries;
     private readonly registered;
-    constructor(sourcePaths: string[], container: VimsContainer, pluginOptions?: Record<string, unknown>);
+    constructor(sourcePaths: string[], container: any, pluginOptions?: any);
     /**
      * Scan all source directories, import subscriber modules, and register them
      * on the event bus resolved from the container.

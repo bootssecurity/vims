@@ -1,3 +1,1 @@
-export declare function startCommand(options: {
-    port: string;
-}): Promise<void>;
+export declare function startCommand(options: any): Promise<void>;

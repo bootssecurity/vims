@@ -9,7 +9,11 @@ export async function run() {
     program
         .command("start")
         .description("Start the VIMS Express API server on port 9000")
-        .option("-p, --port <port>", "Port to run the server on", "9000")
+        .option("-p, --port <number>", "Port to run the VIMS server on", "9005")
+        .option("-d, --directory <path>", "Absolute or relative path to the VIMS project source", ".")
+        .option("--no-build", "Skip the automatic platform build phase")
+        .option("--skip-health", "Skip the infrastructure connectivity and speed tests")
+        .option("--no-kill", "Do not automatically kill processes on the target port")
         .action(startCommand);
     await program.parseAsync(process.argv);
 }

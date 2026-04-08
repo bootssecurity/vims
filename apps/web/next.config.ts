@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   reactCompiler: true,
+  basePath: "/admin",
   transpilePackages: [
     "@vims/audit",
     "@vims/auth",

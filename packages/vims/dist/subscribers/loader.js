@@ -86,10 +86,8 @@ export class SubscriberLoader {
             }
             catch (error) {
                 console.error("SubscriberLoader import failed:", fullPath, error);
-                // Import failed — log but don't crash
             }
         }));
-        console.log(`SubscriberLoader entries loaded from ${dir}:`, this.entries.map(e => e.sourcePath));
     }
     registerAll() {
         // Resolve event bus from container

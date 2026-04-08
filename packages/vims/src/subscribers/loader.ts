@@ -52,11 +52,7 @@ export class SubscriberLoader {
   private readonly entries: SubscriberEntry[] = [];
   private readonly registered: RegisteredSubscriber[] = [];
 
-  constructor(
-    sourcePaths: string[],
-    container: VimsContainer,
-    pluginOptions: Record<string, unknown> = {}
-  ) {
+  constructor(sourcePaths: string[], container: any, pluginOptions: any = {}) {
     this.sourcePaths = sourcePaths;
     this.container = container;
     this.pluginOptions = pluginOptions;
@@ -133,11 +129,9 @@ export class SubscriberLoader {
           this.entries.push({ handler, config, sourcePath: fullPath });
         } catch (error) {
           console.error("SubscriberLoader import failed:", fullPath, error);
-          // Import failed — log but don't crash
         }
       })
     );
-    console.log(`SubscriberLoader entries loaded from ${dir}:`, this.entries.map(e => e.sourcePath));
   }
 
   private registerAll(): void {
