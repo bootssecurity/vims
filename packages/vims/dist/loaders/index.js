@@ -44,4 +44,4 @@ export async function loadVimsAppModules(modulesConfig, opts = {}) {
 export { initializeVimsApp } from "./app";
 export { LinkLoader } from "./link-loader";
 export { ApiLoader } from "./api-loader";
-export { VimsMiddlewarePipeline, requestLogger, attachState, guard, } from "./middleware-pipeline";
+export { VimsMiddlewarePipeline, requestLogger, attachState, guard, requireAuth, } from "./middleware-pipeline";

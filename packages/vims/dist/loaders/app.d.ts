@@ -53,9 +53,14 @@ export type VimsAppInitOptions = {
      *  - "shared"  → both (default)
      */
     workerMode?: "server" | "worker" | "shared";
+    /**
+     * Optional dependency container overwrites for testing.
+     */
+    containerOverwrites?: Record<string, any>;
 };
 export type VimsAppOutput = {
     runtime: VimsAsyncFrameworkRuntime;
+    container: any;
     config: VimsAppConfig;
     subscriberLoader: SubscriberLoader;
     jobLoader: JobLoader;

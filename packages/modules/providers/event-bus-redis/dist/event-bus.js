@@ -14,7 +14,7 @@ export class RedisEventBus {
             connection: this.connection,
             defaultJobOptions: { removeOnComplete: true, removeOnFail: false }
         });
-        // Create the worker for processing events
+        // Create the worker for processing events independently
         this.worker = new Worker(this.queueName, async (job) => {
             await this.processJob(job);
         }, { connection: this.connection });
@@ -26,19 +26,34 @@ export class RedisEventBus {
         const events = Array.isArray(eventOrEvents) ? eventOrEvents : [eventOrEvents];
         if (events.length === 0)
             return;
-        const jobsMap = events.map((ev) => {
-            const jobOpts = Object.assign({}, options);
-            if (options === null || options === void 0 ? void 0 : options.delay)
-                jobOpts.delay = options.delay;
-            if (options === null || options === void 0 ? void 0 : options.attempts)
-                jobOpts.attempts = options.attempts;
-            return {
-                name: ev.name,
-                data: ev,
-                opts: jobOpts,
-            };
-        });
-        await this.queue.addBulk(jobsMap);
+        const jobsMap = [];
+        for (const ev of events) {
+            const subs = this.subscribers.get(ev.name);
+            if (!subs || subs.size === 0)
+                continue;
+            // Unroll to Fan-out independent jobs per subscriber
+            let subscriberIndex = 0;
+            for (const _ of subs) {
+                const jobOpts = Object.assign({}, options);
+                if (options === null || options === void 0 ? void 0 : options.delay)
+                    jobOpts.delay = options.delay;
+                if (options === null || options === void 0 ? void 0 : options.attempts)
+                    jobOpts.attempts = options.attempts;
+                jobsMap.push({
+                    name: `${ev.name}:${subscriberIndex}`,
+                    data: {
+                        eventName: ev.name,
+                        payload: ev.payload,
+                        subscriberIndex,
+                    },
+                    opts: jobOpts,
+                });
+                subscriberIndex++;
+            }
+        }
+        if (jobsMap.length > 0) {
+            await this.queue.addBulk(jobsMap);
+        }
     }
     async subscribe(eventName, subscriber, context) {
         const name = String(eventName);
@@ -58,16 +73,21 @@ export class RedisEventBus {
         return this;
     }
     async processJob(job) {
-        const eventName = job.name;
+        const { eventName, payload, subscriberIndex } = job.data;
         const subs = this.subscribers.get(eventName);
         if (!subs || subs.size === 0)
             return;
-        const eventData = job.data;
-        // Execute concurrently
-        await Promise.all(Array.from(subs).map((sub) => sub(eventData.payload, eventData.name).catch((err) => {
-            this.logger.error(`[RedisEventBus] Subscriber error for ${eventName}`, err);
-            throw err; // BullMQ catches this to mark job failed if not all subs succeed
-        })));
+        const subscriberArr = Array.from(subs);
+        const subscriber = subscriberArr[subscriberIndex];
+        if (!subscriber)
+            return;
+        try {
+            await subscriber(payload, eventName);
+        }
+        catch (err) {
+            this.logger.error(`[RedisEventBus] Subscriber ${subscriberIndex} failed for ${eventName}`, err);
+            throw err; // BullMQ fails just this specific job, allowing independent retry without side-effects
+        }
     }
     async destroy() {
         await this.worker.close();

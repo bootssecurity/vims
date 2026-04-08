@@ -26,12 +26,12 @@ export class RedisLocking {
   private readonly client: Redis;
   private readonly prefix: string;
 
-  constructor({ 
-    logger, 
-    options 
-  }: { 
-    logger: Logger; 
-    options: RedisLockingOptions 
+  constructor({
+    logger,
+    options
+  }: {
+    logger: Logger;
+    options: RedisLockingOptions
   }) {
     this.logger = logger;
     this.prefix = options.prefix ?? "vims:lock:";
@@ -40,15 +40,13 @@ export class RedisLocking {
 
   async acquire(keys: string | string[], options?: { expireTimeout?: number }): Promise<string> {
     const keyArr = Array.isArray(keys) ? keys : [keys];
-    // In a multi-key scenario, we just lock the first for simplicity or build a multi-lock
-    // Here we implement single key mapped lock to match Medusa API
     const key = this.prefix + keyArr.join(":");
-    
+
     const ownerToken = randomUUID();
     const ttlMatches = options?.expireTimeout ?? 15000;
 
     const acquired = await this.client.set(key, ownerToken, "PX", ttlMatches, "NX");
-    
+
     if (!acquired) {
       throw new Error(`Could not acquire lock for key: ${keyArr.join(":")}`);
     }

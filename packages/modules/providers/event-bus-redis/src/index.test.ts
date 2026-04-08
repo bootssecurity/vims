@@ -44,12 +44,21 @@ describe("RedisEventBus Provider", () => {
       options: { redisUrl: "redis://127.0.0.1:6379" },
     });
     
-    const sub = vi.fn();
-    await bus.subscribe("evt", sub);
+    const sub1 = vi.fn();
+    const sub2 = vi.fn();
+    await bus.subscribe("evt", sub1);
+    await bus.subscribe("evt", sub2);
     await bus.emit({ name: "evt", payload: { id: 1 } });
     
-    // addBulk should be called on the mocked Queue
+    // addBulk should be called on the mocked Queue with two jobs because of two subscribers
     const queueInstance = (bus as any).queue;
-    expect(queueInstance.addBulk).toHaveBeenCalled();
+    expect(queueInstance.addBulk).toHaveBeenCalledTimes(1);
+
+    const passedJobs = queueInstance.addBulk.mock.calls[0][0];
+    expect(passedJobs).toHaveLength(2);
+    expect(passedJobs[0].name).toBe("evt:0");
+    expect(passedJobs[1].name).toBe("evt:1");
+    expect(passedJobs[0].data).toEqual({ eventName: "evt", payload: { id: 1 }, subscriberIndex: 0 });
+    expect(passedJobs[1].data).toEqual({ eventName: "evt", payload: { id: 1 }, subscriberIndex: 1 });
   });
 });

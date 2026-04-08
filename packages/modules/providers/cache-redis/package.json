@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@vims/framework": "0.1.0",
-    "redis": "^5.9.0"
+    "ioredis": "^5.4.1"
   },
   "vims": {
     "kind": "provider",

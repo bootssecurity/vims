@@ -18,7 +18,11 @@
   },
   "dependencies": {
     "@vims/framework": "0.1.0",
-    "@vims/tenancy": "0.1.0"
+    "@vims/tenancy": "0.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7"
   },
   "vims": {
     "kind": "module",

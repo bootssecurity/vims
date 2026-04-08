@@ -194,8 +194,19 @@ export function bootFramework(manifest, config = {}) {
         });
         providerRuntime.set(providerDefinition.key, provider);
         container.register(`provider:${providerDefinition.key}`, provider);
+        // Register category shortcuts (e.g. module:eventBus, module:cache)
+        if (providerDefinition.category === "events") {
+            container.register("module:eventBus", provider);
+        }
+        if (providerDefinition.category === "cache") {
+            container.register("module:cache", provider);
+        }
+        if (providerDefinition.category === "database") {
+            container.register("module:database", provider);
+        }
         logger.info("framework.provider.registered", {
             provider: providerDefinition.key,
+            category: providerDefinition.category,
         });
     }
     const orderedModules = resolveDependencyOrder(enabledModules);

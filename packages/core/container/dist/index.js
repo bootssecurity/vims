@@ -4,8 +4,11 @@ export function createContainer() {
         register(key, value) {
             values.set(key, value);
         },
-        resolve(key) {
+        resolve(key, options) {
             if (!values.has(key)) {
+                if (options === null || options === void 0 ? void 0 : options.allowUnregistered) {
+                    return undefined;
+                }
                 throw new Error(`Container value "${key}" is not registered`);
             }
             return values.get(key);

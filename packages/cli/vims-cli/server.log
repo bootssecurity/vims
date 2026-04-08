@@ -1,0 +1,9 @@
+Starting VIMS Backend on port 9000...
+Failed to start VIMS Server: Error: Container value "module:eventBus" is not registered
+    at Object.resolve (file:///Users/lakhwindersingh/Desktop/NewApp/vims/packages/core/container/dist/index.js:9:23)
+    at SubscriberLoader.registerAll (/Users/lakhwindersingh/Desktop/NewApp/vims/packages/vims/dist/subscribers/loader.js:95:104)
+    at SubscriberLoader.load (/Users/lakhwindersingh/Desktop/NewApp/vims/packages/vims/dist/subscribers/loader.js:39:14)
+    at async initializeVimsApp (/Users/lakhwindersingh/Desktop/NewApp/vims/packages/vims/dist/loaders/app.js:62:5)
+    at async Command.startCommand (file:///Users/lakhwindersingh/Desktop/NewApp/vims/packages/cli/vims-cli/dist/commands/start.js:15:30)
+    at async Command.parseAsync (/Users/lakhwindersingh/Desktop/NewApp/vims/node_modules/commander/lib/command.js:1104:5)
+    at async run (file:///Users/lakhwindersingh/Desktop/NewApp/vims/packages/cli/vims-cli/dist/index.js:14:5)

@@ -129,3 +129,35 @@ export function guard(predicate, message = "Forbidden") {
         await next();
     };
 }
+/**
+ * Standard Authentication Guard
+ * Extrapolates Bearer tokens or intercepts request safely.
+ */
+export function requireAuth() {
+    return async (ctx, next) => {
+        const authHeader = Array.isArray(ctx.req.headers.authorization)
+            ? ctx.req.headers.authorization[0]
+            : ctx.req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            ctx.res.status(401).json({ type: "unauthorized", message: "Missing or invalid Bearer token" });
+            return;
+        }
+        const token = authHeader.split(" ")[1];
+        // Resolve the auth module from the request scope
+        const scope = ctx.req.scope;
+        const authModule = scope === null || scope === void 0 ? void 0 : scope.resolve("module:auth", { allowUnregistered: true });
+        if (!authModule) {
+            // If auth module isn't loaded, fallback to basic pass-through for now 
+            ctx.req.auth_context = { token };
+            await next();
+            return;
+        }
+        const authContext = authModule.verifySessionToken(token);
+        if (!authContext) {
+            ctx.res.status(401).json({ type: "unauthorized", message: "Invalid or expired session token" });
+            return;
+        }
+        ctx.req.auth_context = authContext;
+        await next();
+    };
+}

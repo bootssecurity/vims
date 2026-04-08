@@ -7,8 +7,17 @@ export function createPostgresUrl() {
   );
 }
 
+let cachedClient: ReturnType<typeof postgres> | null = null;
+
 export function createPostgresClient() {
-  return postgres(createPostgresUrl());
+  if (!cachedClient) {
+    cachedClient = postgres(createPostgresUrl(), {
+      max: 10,
+      idle_timeout: 20,
+      max_lifetime: 60 * 30, // 30 minutes
+    });
+  }
+  return cachedClient;
 }
 
 export const postgresProvider = defineProvider({

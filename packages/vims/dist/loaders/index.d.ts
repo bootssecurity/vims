@@ -25,5 +25,5 @@ export type { VimsAppInitOptions, VimsAppOutput } from "./app";
 export { LinkLoader } from "./link-loader";
 export { ApiLoader } from "./api-loader";
 export type { LoadedVimsRoute, VimsRouteHandler, VimsMiddlewareHandler, VimsRequest, VimsResponse, VimsRouter, HttpMethod, } from "./api-loader";
-export { VimsMiddlewarePipeline, requestLogger, attachState, guard, } from "./middleware-pipeline";
+export { VimsMiddlewarePipeline, requestLogger, attachState, guard, requireAuth, } from "./middleware-pipeline";
 export type { PipelineContext, PipelineMiddleware, MiddlewareBuilderFn, } from "./middleware-pipeline";

@@ -24,11 +24,11 @@ import { discoverWorkspaceManifest } from "../generated/workspace-catalog";
  * 10. Return handles + shutdown fn
  */
 export async function initializeVimsApp(options = {}) {
-    const { directory = process.cwd(), configOverrides = {}, modulesConfig, subscriberPaths = [], jobPaths = [], workflowPaths = [], linkPaths = [], apiPaths = [], router, workerMode = "shared", } = options;
+    const { directory = process.cwd(), configOverrides = {}, modulesConfig, subscriberPaths = [], jobPaths = [], workflowPaths = [], linkPaths = [], apiPaths = [], router, workerMode = "shared", containerOverwrites = {}, manifest: passedManifest, } = options;
     // 1. Load config
     const config = loadVimsConfig(configOverrides);
     // 2 & 3. Boot framework + async prepare
-    const manifest = discoverWorkspaceManifest(config);
+    const manifest = passedManifest || discoverWorkspaceManifest(config);
     const runtime = await bootFrameworkAsync(manifest, config);
     // 4. Bootstrap declarative modules if config provided
     if (modulesConfig) {
@@ -46,6 +46,12 @@ export async function initializeVimsApp(options = {}) {
     const query = createQuery(container);
     container.register("link", link);
     container.register("query", query);
+    // Apply overwrites
+    if (containerOverwrites) {
+        for (const [key, value] of Object.entries(containerOverwrites)) {
+            container.register(key, value);
+        }
+    }
     // 6. Load workflows
     const workflowDirs = [
         join(directory, "src", "workflows"),
@@ -72,6 +78,13 @@ export async function initializeVimsApp(options = {}) {
     const apiDirs = [join(directory, "src", "api"), ...apiPaths];
     const apiLoader = new ApiLoader({ sourceDirs: apiDirs, router });
     if (shouldLoadApi) {
+        if (router) {
+            // Attach scope/container to every request (Medusa parity)
+            router.use((req, res, next) => {
+                req.scope = container;
+                next();
+            });
+        }
         await apiLoader.load();
     }
     // 9. Start phase
@@ -85,6 +98,7 @@ export async function initializeVimsApp(options = {}) {
     };
     return {
         runtime,
+        container,
         config,
         subscriberLoader,
         jobLoader,

@@ -17,8 +17,6 @@ export class RedisLocking {
     async acquire(keys, options) {
         var _a;
         const keyArr = Array.isArray(keys) ? keys : [keys];
-        // In a multi-key scenario, we just lock the first for simplicity or build a multi-lock
-        // Here we implement single key mapped lock to match Medusa API
         const key = this.prefix + keyArr.join(":");
         const ownerToken = randomUUID();
         const ttlMatches = (_a = options === null || options === void 0 ? void 0 : options.expireTimeout) !== null && _a !== void 0 ? _a : 15000;

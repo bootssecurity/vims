@@ -1,4 +1,4 @@
-import { createClient } from "redis";
+import Redis from "ioredis";
 import { defineProvider } from "@vims/framework";
 
 export function createRedisUrl() {
@@ -17,5 +17,5 @@ export const redisCacheProvider = defineProvider({
 });
 
 export function createRedisCacheClient(url = createRedisUrl()) {
-  return createClient({ url });
+  return new Redis(url);
 }

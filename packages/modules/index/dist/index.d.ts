@@ -10,6 +10,9 @@ export declare const platformModules: readonly [import("@vims/framework").VimsMo
 }>, import("@vims/framework").VimsModuleDefinition<{
     strategies: string[];
     issueSessionToken(userId: string): string;
+    verifySessionToken(token: string): ({
+        userId: string;
+    } & import("jsonwebtoken").JwtPayload) | null;
 }>, import("@vims/framework").VimsModuleDefinition<{
     pipelineStages: string[];
     inventoryCapabilitiesCount: number;

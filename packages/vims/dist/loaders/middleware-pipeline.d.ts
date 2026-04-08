@@ -76,3 +76,8 @@ export declare function attachState(key: string, value: unknown): PipelineMiddle
  * Returns a 403 response if the guard fails.
  */
 export declare function guard(predicate: (ctx: PipelineContext) => boolean | Promise<boolean>, message?: string): PipelineMiddleware;
+/**
+ * Standard Authentication Guard
+ * Extrapolates Bearer tokens or intercepts request safely.
+ */
+export declare function requireAuth(): PipelineMiddleware;

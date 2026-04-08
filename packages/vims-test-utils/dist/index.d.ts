@@ -4,6 +4,9 @@ export declare const defaultTestModules: readonly [import("@vims/framework").Vim
 }>, import("@vims/framework").VimsModuleDefinition<{
     strategies: string[];
     issueSessionToken(userId: string): string;
+    verifySessionToken(token: string): ({
+        userId: string;
+    } & import("jsonwebtoken").JwtPayload) | null;
 }>, import("@vims/framework").VimsModuleDefinition<{
     roles: string[];
     can(role: string, permission: string): boolean;
@@ -65,3 +68,4 @@ export declare function createModuleTestRunner(): {
     manifest(): import("@vims/framework").VimsFrameworkManifest;
     config(overrides?: Partial<VimsRuntimeConfig>): VimsRuntimeConfig;
 };
+export * from "./http";

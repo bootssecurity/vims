@@ -103,6 +103,7 @@
     "@vims/types": "0.1.0",
     "@vims/utils": "0.1.0",
     "@vims/websites": "0.1.0",
-    "@vims/workflows-sdk": "0.1.0"
+    "@vims/workflows-sdk": "0.1.0",
+    "zod": "^3.23.0"
   }
 }
