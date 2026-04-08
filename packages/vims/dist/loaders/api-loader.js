@@ -48,6 +48,7 @@ export class ApiLoader {
         this.routes = [];
         this.sourceDirs = opts.sourceDirs;
         this.router = opts.router;
+        this.container = opts.container;
         this.logger = opts.logger;
     }
     // ── Public ──────────────────────────────────────────────────────────────────
@@ -169,7 +170,8 @@ export class ApiLoader {
                 });
             }
         }
-        catch (_b) {
+        catch (err) {
+            console.error(`Import failed for ${filePath}:`, err);
             (_a = this.logger) === null || _a === void 0 ? void 0 : _a.error("api.loader.import.failed", { path: filePath });
         }
     }
@@ -179,7 +181,27 @@ export class ApiLoader {
         for (const route of this.routes) {
             const routerMethod = this.router[route.method];
             if (typeof routerMethod === "function") {
-                routerMethod.call(this.router, route.path, ...route.middlewares, route.handler);
+                routerMethod.call(this.router, route.path, ...route.middlewares, async (req, res, next) => {
+                    if (this.container) {
+                        req.container = this.container.createScope();
+                        try {
+                            const db = req.container.resolve("provider:database-postgres");
+                            req.manager = db.manager;
+                        }
+                        catch (_a) {
+                            // If no db, just ignore
+                        }
+                    }
+                    try {
+                        await route.handler(req, res, next);
+                    }
+                    catch (err) {
+                        if (next)
+                            next(err);
+                        else
+                            throw err;
+                    }
+                });
             }
         }
     }

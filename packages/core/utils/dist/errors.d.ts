@@ -1,4 +1,4 @@
-export declare const MedusaErrorTypes: {
+export declare const VimsErrorTypes: {
     readonly DB_ERROR: "database_error";
     readonly DUPLICATE_ERROR: "duplicate_error";
     readonly INVALID_ARGUMENT: "invalid_argument";
@@ -9,9 +9,9 @@ export declare const MedusaErrorTypes: {
     readonly PAYMENT_AUTHORIZATION_ERROR: "payment_authorization_error";
     readonly CONFLICT: "conflict";
 };
-export type MedusaErrorType = (typeof MedusaErrorTypes)[keyof typeof MedusaErrorTypes];
-export declare class MedusaError extends Error {
-    type: MedusaErrorType;
+export type VimsErrorType = (typeof VimsErrorTypes)[keyof typeof VimsErrorTypes];
+export declare class VimsError extends Error {
+    type: VimsErrorType;
     date: Date;
     static Types: {
         readonly DB_ERROR: "database_error";
@@ -24,5 +24,5 @@ export declare class MedusaError extends Error {
         readonly PAYMENT_AUTHORIZATION_ERROR: "payment_authorization_error";
         readonly CONFLICT: "conflict";
     };
-    constructor(type: MedusaErrorType, message: string);
+    constructor(type: VimsErrorType, message: string);
 }

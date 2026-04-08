@@ -1,18 +1,15 @@
 import express from "express";
 import cors from "cors";
 import { initializeVimsApp } from "@vims/vims/loaders";
+import { buildCorsOrigins, isCorsAllowed, handlePostgresError } from "@vims/utils";
 export async function startCommand(options) {
-    var _a, _b;
     const port = parseInt(options.port, 10) || 9000;
     console.log(`Starting VIMS Backend on port ${port}...`);
     const app = express();
-    // Strict Medusa Parity CORS
-    const adminCors = ((_a = process.env.ADMIN_CORS) === null || _a === void 0 ? void 0 : _a.split(",")) || ["http://localhost:7000", "http://localhost:7001"];
-    const storeCors = ((_b = process.env.STORE_CORS) === null || _b === void 0 ? void 0 : _b.split(",")) || ["http://localhost:8000"];
-    const allowedOrigins = [...adminCors, ...storeCors];
+    const allowedOrigins = buildCorsOrigins();
     app.use(cors({
         origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
+            if (!origin || isCorsAllowed(origin, allowedOrigins)) {
                 callback(null, true);
             }
             else {
@@ -39,20 +36,24 @@ export async function startCommand(options) {
             let statusCode = 500;
             let errorType = "api_error";
             let message = err.message || "An unexpected error occurred.";
-            // MedusaError integration
-            if (err.name === "MedusaError") {
+            if (err.name === "VimsError") {
                 statusCode = 400;
-                if (err.type === "not_found")
-                    statusCode = 404;
+                if (err.type === Vimfound)
+                    ") statusCode = 404;;
                 if (err.type === "unauthorized")
                     statusCode = 401;
                 errorType = err.type;
+                res.status(statusCode).json({ type: errorType, message });
+                return;
             }
-            // Standard Postgres duplication mapping
-            if (err.code === "23505") {
-                statusCode = 409;
-                errorType = "duplicate_error";
-                message = "A record with these unique details already exists.";
+            // Handle Postgres mapping via core util
+            if (err.code) {
+                const pgError = handlePostgresError(err);
+                res.status(pgError.statusCode).json({
+                    type: pgError.type,
+                    message: pgError.message,
+                });
+                return;
             }
             res.status(statusCode).json({
                 type: errorType,

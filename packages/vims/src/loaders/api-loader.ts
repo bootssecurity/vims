@@ -118,6 +118,7 @@ const METHOD_EXPORT_NAMES = new Set(HTTP_METHODS.map((m) => m.toUpperCase()));
 export class ApiLoader {
   private readonly sourceDirs: string[];
   private readonly router?: VimsRouter;
+  private readonly container?: any;
   private readonly routes: LoadedVimsRoute[] = [];
   private readonly logger?: {
     info(msg: string, meta?: Record<string, unknown>): void;
@@ -128,10 +129,12 @@ export class ApiLoader {
   constructor(opts: {
     sourceDirs: string[];
     router?: VimsRouter;
+    container?: any;
     logger?: ApiLoader["logger"];
   }) {
     this.sourceDirs = opts.sourceDirs;
     this.router = opts.router;
+    this.container = opts.container;
     this.logger = opts.logger;
   }
 
@@ -270,7 +273,8 @@ export class ApiLoader {
           sourcePath: filePath,
         });
       }
-    } catch {
+    } catch (err) {
+      console.error(`Import failed for ${filePath}:`, err);
       this.logger?.error("api.loader.import.failed", { path: filePath });
     }
   }
@@ -281,7 +285,28 @@ export class ApiLoader {
     for (const route of this.routes) {
       const routerMethod = this.router[route.method];
       if (typeof routerMethod === "function") {
-        routerMethod.call(this.router, route.path, ...route.middlewares, route.handler);
+        routerMethod.call(
+          this.router, 
+          route.path, 
+          ...route.middlewares, 
+          async (req: any, res: any, next: any) => {
+            if (this.container) {
+              req.container = this.container.createScope();
+              try {
+                const db = req.container.resolve("provider:database-postgres");
+                req.manager = db.manager;
+              } catch {
+                // If no db, just ignore
+              }
+            }
+            try {
+              await route.handler(req, res, next);
+            } catch (err) {
+              if (next) next(err);
+              else throw err;
+            }
+          }
+        );
       }
     }
   }

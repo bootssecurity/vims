@@ -131,19 +131,30 @@ export class SubscriberLoader {
           if (!config?.event) return;
 
           this.entries.push({ handler, config, sourcePath: fullPath });
-        } catch {
+        } catch (error) {
+          console.error("SubscriberLoader import failed:", fullPath, error);
           // Import failed — log but don't crash
         }
       })
     );
+    console.log(`SubscriberLoader entries loaded from ${dir}:`, this.entries.map(e => e.sourcePath));
   }
 
   private registerAll(): void {
-    // Resolve event bus from container (optional — may not be registered yet)
-    const eventBus = ((this.container as any).resolve?.(
-      "module:eventBus",
-      { allowUnregistered: true }
-    )) as MinimalEventBus | undefined;
+    // Resolve event bus from container
+    let eventBus: MinimalEventBus | undefined;
+    try {
+      eventBus = this.container.resolve("provider:event-bus-redis") as any;
+      if (!eventBus) {
+        eventBus = this.container.resolve("provider:event-bus-local") as any;
+      }
+      // In tests, the redis provider registers the bus nested under .bus. Adjust if so.
+      if (typeof eventBus?.subscribe !== "function" && (eventBus as any).bus) {
+        eventBus = (eventBus as any).bus;
+      }
+    } catch {
+      // Ignore if no event bus is registered
+    }
 
     for (const entry of this.entries) {
       const events = Array.isArray(entry.config.event)

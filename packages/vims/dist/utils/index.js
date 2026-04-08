@@ -1,2 +1,2 @@
-export { formatNumber, MedusaError } from "@vims/utils";
+export { formatNumber } from "@vims/utils";
 export * from "./validators";

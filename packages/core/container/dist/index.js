@@ -1,14 +1,11 @@
-export function createContainer() {
-    const values = new Map();
+export function createContainer(initialValues = new Map()) {
+    const values = new Map(initialValues);
     return {
         register(key, value) {
             values.set(key, value);
         },
-        resolve(key, options) {
+        resolve(key) {
             if (!values.has(key)) {
-                if (options === null || options === void 0 ? void 0 : options.allowUnregistered) {
-                    return undefined;
-                }
                 throw new Error(`Container value "${key}" is not registered`);
             }
             return values.get(key);
@@ -19,5 +16,9 @@ export function createContainer() {
         entries() {
             return [...values.entries()];
         },
+        createScope() {
+            // Returns an isolated clone inheriting the parent's resolved bindings
+            return createContainer(values);
+        }
     };
 }

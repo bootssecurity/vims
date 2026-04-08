@@ -164,7 +164,7 @@ export async function initializeVimsApp(
   // 5b. Load API routes (only in server/shared mode)
   const shouldLoadApi = workerMode === "server" || workerMode === "shared";
   const apiDirs = [join(directory, "src", "api"), ...apiPaths];
-  const apiLoader = new ApiLoader({ sourceDirs: apiDirs, router });
+  const apiLoader = new ApiLoader({ sourceDirs: apiDirs, router, container });
 
   if (shouldLoadApi) {
     await apiLoader.load();

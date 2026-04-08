@@ -5,7 +5,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,7 +22,7 @@
     "@vims/events": "0.1.0",
     "@vims/framework": "0.1.0",
     "@vims/modules-sdk": "0.1.0",
-    "bullmq": "^5.13.0",
+    "bullmq": "^5.73.1",
     "ioredis": "^5.4.1"
   },
   "vims": {

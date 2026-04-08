@@ -1,4 +1,4 @@
-export const MedusaErrorTypes = {
+export const VimsErrorTypes = {
   DB_ERROR: "database_error",
   DUPLICATE_ERROR: "duplicate_error",
   INVALID_ARGUMENT: "invalid_argument",
@@ -10,17 +10,17 @@ export const MedusaErrorTypes = {
   CONFLICT: "conflict",
 } as const;
 
-export type MedusaErrorType = (typeof MedusaErrorTypes)[keyof typeof MedusaErrorTypes];
+export type VimsErrorType = (typeof VimsErrorTypes)[keyof typeof VimsErrorTypes];
 
-export class MedusaError extends Error {
-  public type: MedusaErrorType;
+export class VimsError extends Error {
+  public type: VimsErrorType;
   public date: Date;
 
-  public static Types = MedusaErrorTypes;
+  public static Types = VimsErrorTypes;
 
-  constructor(type: MedusaErrorType, message: string) {
+  constructor(type: VimsErrorType, message: string) {
     super(message);
-    this.name = "MedusaError";
+    this.name = "VimsError";
     this.type = type;
     this.date = new Date();
   }

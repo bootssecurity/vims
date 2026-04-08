@@ -87,11 +87,13 @@ export type VimsRouter = {
 export declare class ApiLoader {
     private readonly sourceDirs;
     private readonly router?;
+    private readonly container?;
     private readonly routes;
     private readonly logger?;
     constructor(opts: {
         sourceDirs: string[];
         router?: VimsRouter;
+        container?: any;
         logger?: ApiLoader["logger"];
     });
     load(): Promise<void>;

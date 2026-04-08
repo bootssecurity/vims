@@ -44,6 +44,8 @@ export declare const defaultTestProviders: readonly [import("@vims/framework").V
             name: string;
             payload: T;
         };
+        subscribe(eventName: string, handler: import("@vims/events").VimsEventSubscriber): void;
+        unsubscribe(eventName: string, handler: import("@vims/events").VimsEventSubscriber): void;
         all(): import("@vims/events").VimsEvent<unknown>[];
         count(name?: string): number;
     };
@@ -68,4 +70,3 @@ export declare function createModuleTestRunner(): {
     manifest(): import("@vims/framework").VimsFrameworkManifest;
     config(overrides?: Partial<VimsRuntimeConfig>): VimsRuntimeConfig;
 };
-export * from "./http";
