@@ -27,4 +27,8 @@ export * from "./vims-module";
 export * from "./definitions";
 export * from "./link";
 export * from "./remote-query";
+export { LinkRepository } from "./db/link-repository";
+export type { LinkEdge, LinkFilter } from "./db/link-repository";
+export { linkPivots } from "./db/link-pivot-schema";
+export type { InsertLinkPivot, SelectLinkPivot } from "./db/link-pivot-schema";
 export type { DiscoveredSchema } from "./loaders/utils/load-internal";

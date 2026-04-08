@@ -1,4 +1,5 @@
 import { type VimsAppConfig, type VimsAsyncFrameworkRuntime } from "@vims/framework";
+import { Link, type RemoteQuery } from "@vims/modules-sdk";
 import { SubscriberLoader } from "../subscribers/loader";
 import { JobLoader } from "../jobs/loader";
 import { WorkflowLoader } from "../flows/loader";
@@ -61,6 +62,8 @@ export type VimsAppOutput = {
     workflowLoader: WorkflowLoader;
     linkLoader: LinkLoader;
     apiLoader: ApiLoader;
+    link: Link;
+    query: RemoteQuery;
     shutdown: () => Promise<void>;
 };
 /**

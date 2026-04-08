@@ -1,4 +1,5 @@
 import { type VimsLinkRegistration } from "./index";
+import { LinkRepository } from "./db/link-repository";
 export type LinkDeleteInput = {
     [moduleKey: string]: Record<string, string | string[]>;
 };
@@ -16,37 +17,42 @@ export type LinkCascadeResult = {
         error: Error;
     }>;
 };
+export type LinkOptions = {
+    /**
+     * Injected repository for durable edge storage.
+     * When omitted the `Link` operates in in-memory-only mode (no persistence).
+     */
+    repository?: LinkRepository;
+};
 /**
  * Link
  *
- * Maintains an in-memory relationship graph built from `VimsLinkRegistry`
+ * Maintains a relationship graph built from `VimsLinkRegistry`
  * and provides CRUD-like operations over module-to-module associations.
  *
- *
- * Data is stored in an in-memory adjacency map keyed
- * by `linkId → (sourceId → targetId[])`.
- *
- * For persistence, modules that own links should implement their own repository
- * layer; this class is an orchestration layer, not a storage layer.
+ * Data is stored in an in-memory adjacency map (fast-path cache) keyed by
+ * `linkId → (sourceId → targetId[])`.  When a `LinkRepository` is injected,
+ * writes are also persisted to the backing store (Drizzle or in-memory fallback).
  *
  * Usage:
  * ```ts
+ * // In-memory only (tests, local dev without a DB)
  * const link = new Link();
  *
- * // Create a relationship
- * await link.create({ crm: { deal_id: "d1" }, inventory: { product_id: "p1" } });
+ * // With durable persistence
+ * const repo = new LinkRepository(db, linkPivots);
+ * const link = new Link(VimsLinkRegistry, { repository: repo });
  *
- * // List links for a deal
- * const links = await link.list({ crm: { deal_id: "d1" } });
- *
- * // Cascade-delete everything linked to a CRM deal
- * const result = await link.delete({ crm: { deal_id: "d1" } });
+ * await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+ * const links = await link.list({ crm: { id: "deal-1" } });
+ * const result = await link.delete({ crm: { id: ["deal-1"] } });
  * ```
  */
 export declare class Link {
     private readonly store;
     private relations;
-    constructor(registry?: Map<string, VimsLinkRegistration>);
+    private readonly repo;
+    constructor(registry?: Map<string, VimsLinkRegistration>, options?: LinkOptions);
     /**
      * Register (create) links between module records.
      *
@@ -54,6 +60,8 @@ export declare class Link {
      * ```ts
      * { moduleA: { foreignKey: "id_value" }, moduleB: { foreignKey: "id_value" } }
      * ```
+     *
+     * Accepts a single entry or an array of entries for batch creation.
      */
     create(input: {
         [moduleKey: string]: Record<string, string>;
@@ -70,7 +78,10 @@ export declare class Link {
     }>): Promise<void>;
     /**
      * List links for the given filter.
-     * Returns matching `{ source, target }` pairs.
+     * Returns matching `{ source, target, linkId }` tuples.
+     *
+     * When a repository is present and the in-memory cache is empty,
+     * the query falls through to the repository.
      */
     list(filter: {
         [moduleKey: string]: Record<string, string | string[]>;
@@ -80,22 +91,34 @@ export declare class Link {
         linkId: string;
     }>>;
     /**
+     * Get all target IDs linked from a given source within a specific linkId.
+     * Checks in-memory cache first, falls back to repository.
+     */
+    getTargetIds(linkId: string, sourceId: string): Promise<string[]>;
+    /**
+     * Get all source IDs that link to a given target within a specific linkId.
+     */
+    getSourceIds(linkId: string, targetId: string): Promise<string[]>;
+    /**
      * Delete all links sourced from the given module records.
      * If `deleteCascade: true` on the link definition, the cascade metadata
-     * is included in the result for upstream handling.
+     * is included in the result for the caller to act on.
      *
-     * NOTE: The Link class itself does not delete module records — it deletes
-     * the *link* rows and returns cascade metadata for the caller to act on.
+     * The Link class removes link edges only — it does not delete module records.
      */
     delete(input: LinkDeleteInput): Promise<LinkCascadeResult>;
     /**
-     * Restore soft-deleted links. In this in-memory implementation,
-     * "restoring" is a no-op since we don't have a soft-delete store,
-     * but the method is provided for interface `Link.restore`.
+     * Restore soft-deleted links.
+     * Returns an empty result in this implementation (no soft-delete store).
      */
     restore(input: LinkRestoreInput): Promise<LinkCascadeResult>;
     /**
-     * Add a new link registration to the graph at runtime (e.g. after LinkLoader runs).
+     * Hydrate the in-memory cache from the repository for a given linkId.
+     * Call during application startup to warm the cache.
+     */
+    hydrate(linkId: string): Promise<void>;
+    /**
+     * Add a new link registration to the graph at runtime.
      */
     addRegistration(reg: VimsLinkRegistration): void;
     /**
@@ -107,8 +130,5 @@ export declare class Link {
         target: string;
     }>;
     private buildRelations;
-    /**
-     * Find the linkId for a pair of module keys regardless of order.
-     */
     private findLinkId;
 }

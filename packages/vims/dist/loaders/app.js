@@ -1,7 +1,7 @@
 import { join } from "path";
 import { loadVimsConfig, } from "@vims/config";
 import { bootFrameworkAsync, } from "@vims/framework";
-import { VimsModule } from "@vims/modules-sdk";
+import { VimsModule, Link, createQuery } from "@vims/modules-sdk";
 import { SubscriberLoader } from "../subscribers/loader";
 import { JobLoader } from "../jobs/loader";
 import { WorkflowLoader } from "../flows/loader";
@@ -41,6 +41,11 @@ export async function initializeVimsApp(options = {}) {
     await linkLoader.load();
     // Resolve the container from the runtime
     const container = runtime.container;
+    // 5a. Wire the Link graph + RemoteQuery into the container
+    const link = new Link();
+    const query = createQuery(container);
+    container.register("link", link);
+    container.register("query", query);
     // 6. Load workflows
     const workflowDirs = [
         join(directory, "src", "workflows"),
@@ -86,6 +91,8 @@ export async function initializeVimsApp(options = {}) {
         workflowLoader,
         linkLoader,
         apiLoader,
+        link,
+        query,
         shutdown,
     };
 }

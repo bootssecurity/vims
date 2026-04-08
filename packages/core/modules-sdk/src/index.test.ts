@@ -12,6 +12,7 @@ import {
   vimsModuleLoader,
   VimsLinkRegistry,
   Link,
+  LinkRepository,
 } from "./index";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -465,5 +466,126 @@ describe("Link class", () => {
     await expect(
       link.create({ unknown: { id: "x" }, also_unknown: { id: "y" } })
     ).rejects.toThrow();
+  });
+});
+
+// ── LinkRepository (in-memory fallback) ──────────────────────────────────────
+
+describe("LinkRepository (in-memory fallback)", () => {
+  it("insert() stores an edge", async () => {
+    const repo = new LinkRepository();
+    await repo.insert({ linkId: "a<>b", sourceModule: "a", sourceId: "s1", targetModule: "b", targetId: "t1" });
+    const edges = await repo.find({ linkId: "a<>b" });
+    expect(edges).toHaveLength(1);
+    expect(edges[0].sourceId).toBe("s1");
+    expect(edges[0].targetId).toBe("t1");
+  });
+
+  it("insert() is idempotent", async () => {
+    const repo = new LinkRepository();
+    const edge = { linkId: "x<>y", sourceModule: "x", sourceId: "s1", targetModule: "y", targetId: "t1" };
+    await repo.insert(edge);
+    await repo.insert(edge);
+    expect(await repo.count({ linkId: "x<>y" })).toBe(1);
+  });
+
+  it("findTargetIds() returns linked target IDs", async () => {
+    const repo = new LinkRepository();
+    await repo.insert({ linkId: "crm<>inv", sourceModule: "crm", sourceId: "deal-1", targetModule: "inv", targetId: "prod-1" });
+    await repo.insert({ linkId: "crm<>inv", sourceModule: "crm", sourceId: "deal-1", targetModule: "inv", targetId: "prod-2" });
+    const ids = await repo.findTargetIds("crm<>inv", "deal-1");
+    expect(ids).toContain("prod-1");
+    expect(ids).toContain("prod-2");
+  });
+
+  it("findSourceIds() returns linked source IDs", async () => {
+    const repo = new LinkRepository();
+    await repo.insert({ linkId: "crm<>inv", sourceModule: "crm", sourceId: "deal-1", targetModule: "inv", targetId: "prod-1" });
+    await repo.insert({ linkId: "crm<>inv", sourceModule: "crm", sourceId: "deal-2", targetModule: "inv", targetId: "prod-1" });
+    const ids = await repo.findSourceIds("crm<>inv", "prod-1");
+    expect(ids).toContain("deal-1");
+    expect(ids).toContain("deal-2");
+  });
+
+  it("deleteBySource() removes edges", async () => {
+    const repo = new LinkRepository();
+    await repo.insert({ linkId: "crm<>inv", sourceModule: "crm", sourceId: "deal-1", targetModule: "inv", targetId: "prod-1" });
+    await repo.deleteBySource("crm<>inv", "deal-1");
+    expect(await repo.count({ linkId: "crm<>inv" })).toBe(0);
+  });
+
+  it("deleteByTarget() removes edges pointing to a target", async () => {
+    const repo = new LinkRepository();
+    await repo.insert({ linkId: "crm<>inv", sourceModule: "crm", sourceId: "deal-1", targetModule: "inv", targetId: "prod-1" });
+    await repo.insert({ linkId: "crm<>inv", sourceModule: "crm", sourceId: "deal-2", targetModule: "inv", targetId: "prod-1" });
+    await repo.deleteByTarget("crm<>inv", "prod-1");
+    expect(await repo.count({ linkId: "crm<>inv" })).toBe(0);
+  });
+
+  it("find() filters by sourceId array", async () => {
+    const repo = new LinkRepository();
+    await repo.insert({ linkId: "L", sourceModule: "a", sourceId: "s1", targetModule: "b", targetId: "t1" });
+    await repo.insert({ linkId: "L", sourceModule: "a", sourceId: "s2", targetModule: "b", targetId: "t2" });
+    const edges = await repo.find({ linkId: "L", sourceId: ["s1"] });
+    expect(edges).toHaveLength(1);
+    expect(edges[0].sourceId).toBe("s1");
+  });
+});
+
+// ── Link with repository injection ────────────────────────────────────────────
+
+describe("Link with LinkRepository", () => {
+  afterEach(() => {
+    VimsLinkRegistry.clear();
+  });
+
+  it("create() persists to repo and in-memory cache", async () => {
+    createModuleLink({ source: "crm", target: "inventory", relationship: "one-to-many" });
+    const repo = new LinkRepository();
+    const link = new Link(VimsLinkRegistry, { repository: repo });
+
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+    expect(link.dump()).toHaveLength(1);
+
+    const [linkId] = [...VimsLinkRegistry.keys()];
+    const edges = await repo.find({ linkId });
+    expect(edges).toHaveLength(1);
+    expect(edges[0].sourceId).toBe("deal-1");
+  });
+
+  it("getTargetIds() returns from cache", async () => {
+    createModuleLink({ source: "crm", target: "inventory", relationship: "one-to-many" });
+    const repo = new LinkRepository();
+    const link = new Link(VimsLinkRegistry, { repository: repo });
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+
+    const [linkId] = [...VimsLinkRegistry.keys()];
+    const ids = await link.getTargetIds(linkId, "deal-1");
+    expect(ids).toContain("prod-1");
+  });
+
+  it("delete() removes from cache and repo", async () => {
+    createModuleLink({ source: "crm", target: "inventory", relationship: "one-to-many", deleteCascade: true });
+    const repo = new LinkRepository();
+    const link = new Link(VimsLinkRegistry, { repository: repo });
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+    await link.delete({ crm: { id: ["deal-1"] } });
+
+    expect(link.dump()).toHaveLength(0);
+    expect(await repo.count({})).toBe(0);
+  });
+
+  it("hydrate() warms cache from repo", async () => {
+    createModuleLink({ source: "crm", target: "inventory", relationship: "one-to-many" });
+    const [linkId] = [...VimsLinkRegistry.keys()];
+    const reg = VimsLinkRegistry.get(linkId)!;
+
+    const repo = new LinkRepository();
+    await repo.insert({ linkId, sourceModule: reg.source, sourceId: "s1", targetModule: reg.target, targetId: "t1" });
+
+    const link = new Link(VimsLinkRegistry, { repository: repo });
+    expect(link.dump()).toHaveLength(0);
+    await link.hydrate(linkId);
+    expect(link.dump()).toHaveLength(1);
   });
 });

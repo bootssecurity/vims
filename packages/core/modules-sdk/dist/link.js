@@ -3,36 +3,33 @@ import { VimsLinkRegistry } from "./index";
 /**
  * Link
  *
- * Maintains an in-memory relationship graph built from `VimsLinkRegistry`
+ * Maintains a relationship graph built from `VimsLinkRegistry`
  * and provides CRUD-like operations over module-to-module associations.
  *
- *
- * Data is stored in an in-memory adjacency map keyed
- * by `linkId → (sourceId → targetId[])`.
- *
- * For persistence, modules that own links should implement their own repository
- * layer; this class is an orchestration layer, not a storage layer.
+ * Data is stored in an in-memory adjacency map (fast-path cache) keyed by
+ * `linkId → (sourceId → targetId[])`.  When a `LinkRepository` is injected,
+ * writes are also persisted to the backing store (Drizzle or in-memory fallback).
  *
  * Usage:
  * ```ts
+ * // In-memory only (tests, local dev without a DB)
  * const link = new Link();
  *
- * // Create a relationship
- * await link.create({ crm: { deal_id: "d1" }, inventory: { product_id: "p1" } });
+ * // With durable persistence
+ * const repo = new LinkRepository(db, linkPivots);
+ * const link = new Link(VimsLinkRegistry, { repository: repo });
  *
- * // List links for a deal
- * const links = await link.list({ crm: { deal_id: "d1" } });
- *
- * // Cascade-delete everything linked to a CRM deal
- * const result = await link.delete({ crm: { deal_id: "d1" } });
+ * await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+ * const links = await link.list({ crm: { id: "deal-1" } });
+ * const result = await link.delete({ crm: { id: ["deal-1"] } });
  * ```
  */
 export class Link {
-    constructor(registry = VimsLinkRegistry) {
-        // In-memory storage: linkId → sourceKey → targetIds
+    constructor(registry = VimsLinkRegistry, options = {}) {
+        var _a;
         this.store = new Map();
-        // Cached relationship graph (rebuilt when registry changes)
         this.relations = new Map();
+        this.repo = (_a = options.repository) !== null && _a !== void 0 ? _a : null;
         this.buildRelations(registry);
     }
     // ── Public API ───────────────────────────────────────────────────────────────
@@ -43,6 +40,8 @@ export class Link {
      * ```ts
      * { moduleA: { foreignKey: "id_value" }, moduleB: { foreignKey: "id_value" } }
      * ```
+     *
+     * Accepts a single entry or an array of entries for batch creation.
      */
     async create(input) {
         const entries = Array.isArray(input) ? input : [input];
@@ -55,21 +54,32 @@ export class Link {
             if (!linkId)
                 throw new Error(`No link definition found between "${modA}" and "${modB}"`);
             const reg = VimsLinkRegistry.get(linkId);
-            const sourceKey = Object.values(entry[reg.source])[0];
-            const targetKey = Object.values(entry[reg.target])[0];
+            const sourceId = Object.values(entry[reg.source])[0];
+            const targetId = Object.values(entry[reg.target])[0];
+            // In-memory fast path
             if (!this.store.has(linkId))
                 this.store.set(linkId, new Map());
             const linkStore = this.store.get(linkId);
-            if (!linkStore.has(sourceKey))
-                linkStore.set(sourceKey, new Set());
-            linkStore.get(sourceKey).add(targetKey);
+            if (!linkStore.has(sourceId))
+                linkStore.set(sourceId, new Set());
+            linkStore.get(sourceId).add(targetId);
+            // Durable path
+            if (this.repo) {
+                await this.repo.insert({
+                    linkId,
+                    sourceModule: reg.source,
+                    sourceId,
+                    targetModule: reg.target,
+                    targetId,
+                });
+            }
         }
     }
     /**
      * Remove specific links between module records.
      */
     async dismiss(input) {
-        var _a;
+        var _a, _b;
         const entries = Array.isArray(input) ? input : [input];
         for (const entry of entries) {
             const modules = Object.keys(entry);
@@ -78,40 +88,56 @@ export class Link {
             const [modA, modB] = modules;
             const linkId = this.findLinkId(modA, modB);
             if (!linkId)
-                return; // no link def → no-op
+                return;
             const reg = VimsLinkRegistry.get(linkId);
-            const sourceKey = Object.values(entry[reg.source])[0];
-            const targetKey = Object.values(entry[reg.target])[0];
-            const linkStore = this.store.get(linkId);
-            (_a = linkStore === null || linkStore === void 0 ? void 0 : linkStore.get(sourceKey)) === null || _a === void 0 ? void 0 : _a.delete(targetKey);
+            const sourceId = Object.values(entry[reg.source])[0];
+            const targetId = Object.values(entry[reg.target])[0];
+            (_b = (_a = this.store.get(linkId)) === null || _a === void 0 ? void 0 : _a.get(sourceId)) === null || _b === void 0 ? void 0 : _b.delete(targetId);
+            if (this.repo) {
+                await this.repo.delete({ linkId, sourceId, targetId });
+            }
         }
     }
     /**
      * List links for the given filter.
-     * Returns matching `{ source, target }` pairs.
+     * Returns matching `{ source, target, linkId }` tuples.
+     *
+     * When a repository is present and the in-memory cache is empty,
+     * the query falls through to the repository.
      */
     async list(filter) {
         const results = [];
         const modules = Object.keys(filter);
         for (const [linkId, registration] of VimsLinkRegistry) {
-            if (!this.store.has(linkId))
-                continue;
             if (!modules.some((m) => m === registration.source || m === registration.target))
                 continue;
+            // Prefer in-memory cache; fall through to repo if cache is empty for this linkId
+            if (!this.store.has(linkId) && this.repo) {
+                const sourceFilter = filter[registration.source];
+                const repoFilter = sourceFilter
+                    ? { linkId, sourceId: Object.values(sourceFilter).flat() }
+                    : { linkId };
+                const edges = await this.repo.find(repoFilter);
+                for (const edge of edges) {
+                    results.push({ source: edge.sourceId, target: edge.targetId, linkId });
+                }
+                continue;
+            }
             const linkStore = this.store.get(linkId);
+            if (!linkStore)
+                continue;
             for (const [sourceId, targetIds] of linkStore) {
-                // Apply filter
                 const sourceFilter = filter[registration.source];
                 const targetFilter = filter[registration.target];
                 if (sourceFilter) {
-                    const filterVals = Object.values(sourceFilter).flat();
-                    if (!filterVals.includes(sourceId))
+                    const vals = Object.values(sourceFilter).flat();
+                    if (!vals.includes(sourceId))
                         continue;
                 }
                 for (const targetId of targetIds) {
                     if (targetFilter) {
-                        const filterVals = Object.values(targetFilter).flat();
-                        if (!filterVals.includes(targetId))
+                        const vals = Object.values(targetFilter).flat();
+                        if (!vals.includes(targetId))
                             continue;
                     }
                     results.push({ source: sourceId, target: targetId, linkId });
@@ -121,12 +147,45 @@ export class Link {
         return results;
     }
     /**
+     * Get all target IDs linked from a given source within a specific linkId.
+     * Checks in-memory cache first, falls back to repository.
+     */
+    async getTargetIds(linkId, sourceId) {
+        var _a;
+        const cached = (_a = this.store.get(linkId)) === null || _a === void 0 ? void 0 : _a.get(sourceId);
+        if (cached && cached.size > 0)
+            return [...cached];
+        if (this.repo) {
+            return this.repo.findTargetIds(linkId, sourceId);
+        }
+        return [];
+    }
+    /**
+     * Get all source IDs that link to a given target within a specific linkId.
+     */
+    async getSourceIds(linkId, targetId) {
+        const results = [];
+        // Check in-memory cache
+        const linkStore = this.store.get(linkId);
+        if (linkStore) {
+            for (const [sourceId, targets] of linkStore) {
+                if (targets.has(targetId))
+                    results.push(sourceId);
+            }
+            if (results.length > 0)
+                return results;
+        }
+        if (this.repo) {
+            return this.repo.findSourceIds(linkId, targetId);
+        }
+        return [];
+    }
+    /**
      * Delete all links sourced from the given module records.
      * If `deleteCascade: true` on the link definition, the cascade metadata
-     * is included in the result for upstream handling.
+     * is included in the result for the caller to act on.
      *
-     * NOTE: The Link class itself does not delete module records — it deletes
-     * the *link* rows and returns cascade metadata for the caller to act on.
+     * The Link class removes link edges only — it does not delete module records.
      */
     async delete(input) {
         var _a;
@@ -138,36 +197,42 @@ export class Link {
                 if (registration.source !== moduleKey && registration.target !== moduleKey)
                     continue;
                 const linkStore = this.store.get(linkId);
-                if (!linkStore)
-                    continue;
                 const isCascadeable = registration.deleteCascade === true;
                 const isSource = registration.source === moduleKey;
                 try {
                     if (isSource) {
                         for (const sourceId of moduleIds) {
-                            const targets = linkStore.get(sourceId);
-                            if (!targets)
-                                continue;
-                            if (isCascadeable) {
+                            const targets = linkStore === null || linkStore === void 0 ? void 0 : linkStore.get(sourceId);
+                            if (isCascadeable && targets) {
                                 const key = registration.target;
+                                const fk = (_a = registration.targetKey) !== null && _a !== void 0 ? _a : "id";
                                 if (!affected[key])
                                     affected[key] = {};
-                                const fk = (_a = registration.targetKey) !== null && _a !== void 0 ? _a : "id";
                                 if (!affected[key][fk])
                                     affected[key][fk] = [];
                                 affected[key][fk].push(...targets);
                             }
-                            linkStore.delete(sourceId);
+                            linkStore === null || linkStore === void 0 ? void 0 : linkStore.delete(sourceId);
+                            if (this.repo) {
+                                await this.repo.deleteBySource(linkId, sourceId);
+                            }
                         }
                     }
                     else {
-                        // target side — soft remove entries pointing to these IDs
-                        for (const [sourceId, targets] of linkStore) {
-                            for (const targetId of moduleIds) {
-                                targets.delete(targetId);
+                        // Target side — remove any edge pointing AT these IDs
+                        if (linkStore) {
+                            for (const [sourceId, targets] of linkStore) {
+                                for (const targetId of moduleIds) {
+                                    targets.delete(targetId);
+                                }
+                                if (targets.size === 0)
+                                    linkStore.delete(sourceId);
                             }
-                            if (targets.size === 0)
-                                linkStore.delete(sourceId);
+                        }
+                        if (this.repo) {
+                            for (const targetId of moduleIds) {
+                                await this.repo.deleteByTarget(linkId, targetId);
+                            }
                         }
                     }
                 }
@@ -183,24 +248,37 @@ export class Link {
         return { affected, errors };
     }
     /**
-     * Restore soft-deleted links. In this in-memory implementation,
-     * "restoring" is a no-op since we don't have a soft-delete store,
-     * but the method is provided for interface `Link.restore`.
+     * Restore soft-deleted links.
+     * Returns an empty result in this implementation (no soft-delete store).
      */
     async restore(input) {
-        // In-memory: nothing to restore. Return empty result.
         return { affected: {}, errors: [] };
     }
     /**
-     * Add a new link registration to the graph at runtime (e.g. after LinkLoader runs).
+     * Hydrate the in-memory cache from the repository for a given linkId.
+     * Call during application startup to warm the cache.
+     */
+    async hydrate(linkId) {
+        if (!this.repo)
+            return;
+        const edges = await this.repo.find({ linkId });
+        if (!this.store.has(linkId))
+            this.store.set(linkId, new Map());
+        const linkStore = this.store.get(linkId);
+        for (const edge of edges) {
+            if (!linkStore.has(edge.sourceId))
+                linkStore.set(edge.sourceId, new Set());
+            linkStore.get(edge.sourceId).add(edge.targetId);
+        }
+    }
+    /**
+     * Add a new link registration to the graph at runtime.
      */
     addRegistration(reg) {
         var _a;
-        const { source, sourceKey = "id", target, targetKey = "id" } = reg;
-        const key = `${source}<>${sourceKey}<>${target}<>${targetKey}`;
-        const existing = (_a = this.relations.get(source)) !== null && _a !== void 0 ? _a : [];
-        existing.push({ registration: reg, cascadeTarget: target });
-        this.relations.set(source, existing);
+        const existing = (_a = this.relations.get(reg.source)) !== null && _a !== void 0 ? _a : [];
+        existing.push({ registration: reg, cascadeTarget: reg.target });
+        this.relations.set(reg.source, existing);
     }
     /**
      * Return all links in the in-memory store, flattened to a readable array.
@@ -225,9 +303,6 @@ export class Link {
             this.relations.set(reg.source, existing);
         }
     }
-    /**
-     * Find the linkId for a pair of module keys regardless of order.
-     */
     findLinkId(modA, modB) {
         for (const [linkId, reg] of VimsLinkRegistry) {
             if ((reg.source === modA && reg.target === modB) ||

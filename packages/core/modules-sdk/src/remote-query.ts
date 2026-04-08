@@ -1,5 +1,6 @@
 import type { DiscoveredSchema } from "./loaders/utils/load-internal";
 import { VimsLinkRegistry } from "./index";
+import type { Link } from "./link";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -18,18 +19,14 @@ export type QueryOptions = {
 };
 
 export type QueryInput = {
-  /** Starting module key, e.g. "crm" */
   entryPoint: string;
-  /** Fields (and nested traversals) to include in the result */
   variables?: QueryFieldSelector;
-  /** Filter applied to the entry module's records */
   filters?: QueryFilter;
   options?: QueryOptions;
 };
 
 export type QueryResult<T = Record<string, unknown>> = {
   data: T[];
-  /** Paging metadata */
   metadata: {
     count: number;
     take: number;
@@ -46,15 +43,15 @@ type MinimalContainer = {
 /**
  * RemoteQuery
  *
- * A cross-module query engine that:
- *  1. Loads the discovered Drizzle schema for the entry module from the container
- *  2. Resolves cross-module relationships declared in VimsLinkRegistry
- *  3. Returns a typed result shape with field projection
+ * Cross-module query engine.
  *
- * In this implementation, data retrieval itself is delegated to the registered
- * module service (`module:<key>`) because the actual Drizzle db connection
- * lives there. RemoteQuery acts as the query planner that orchestrates
- * multi-module fetches and joins them in-process.
+ * Steps for each call to `query()`:
+ *  1. Resolve the entry module's service from the container
+ *  2. Fetch records via the service's `list()` / `find()` method
+ *  3. Project the requested fields (field selector)
+ *  4. For each key in the selector that matches a related module,
+ *     use the registered `Link` instance to look up linked IDs,
+ *     then fetch the related records and attach them
  *
  * Usage:
  * ```ts
@@ -62,7 +59,12 @@ type MinimalContainer = {
  *
  * const { data } = await query.query({
  *   entryPoint: "crm",
- *   variables: { id: true, firstName: true, stage: true },
+ *   variables: {
+ *     id: true,
+ *     firstName: true,
+ *     stage: true,
+ *     inventory: { id: true, make: true, model: true },
+ *   },
  *   filters: { stage: "New Lead" },
  *   options: { take: 20, skip: 0 },
  * });
@@ -84,27 +86,17 @@ export class RemoteQuery {
     const take = options?.take ?? 20;
     const skip = options?.skip ?? 0;
 
-    // Resolve the schema for the entry module
-    const schema = this.container.resolve<DiscoveredSchema | undefined>(
-      `schema:${entryPoint}`,
-      { allowUnregistered: true }
-    );
-
-    // Resolve the module service
     const service = this.container.resolve<any>(
       `module:${entryPoint}`,
       { allowUnregistered: true }
     );
 
-    // If the service exposes a `list()` or `find()` method, delegate to it
     const rawData = await this.fetchFromService(service, filters, options);
 
-    // Project fields
     const projected = rawData.map((record: Record<string, unknown>) =>
       variables ? this.project(record, variables) : record
     );
 
-    // Resolve linked modules
     const enriched = await this.resolveLinks(entryPoint, projected, variables);
 
     return {
@@ -114,7 +106,7 @@ export class RemoteQuery {
   }
 
   /**
-   * Returns table information discovered for a module's schema.
+   * Returns schema metadata for a module.
    */
   getSchema(moduleKey: string): DiscoveredSchema | undefined {
     return this.container.resolve<DiscoveredSchema | undefined>(
@@ -124,16 +116,15 @@ export class RemoteQuery {
   }
 
   /**
-   * Returns all link definitions that connect `moduleKey` to another module.
+   * Returns all registered link relationships that touch `moduleKey`.
    */
-  getRelationships(moduleKey: string) {
-    const result: Array<{
-      linkId: string;
-      source: string;
-      target: string;
-      relationship: string;
-    }> = [];
-
+  getRelationships(moduleKey: string): Array<{
+    linkId: string;
+    source: string;
+    target: string;
+    relationship: string;
+  }> {
+    const result = [];
     for (const [linkId, reg] of VimsLinkRegistry) {
       if (reg.source === moduleKey || reg.target === moduleKey) {
         result.push({
@@ -144,7 +135,6 @@ export class RemoteQuery {
         });
       }
     }
-
     return result;
   }
 
@@ -157,7 +147,6 @@ export class RemoteQuery {
   ): Promise<Record<string, unknown>[]> {
     if (!service) return [];
 
-    // Try common service method names in order of preference
     for (const method of ["list", "find", "findAll", "getAll"]) {
       if (typeof service[method] === "function") {
         try {
@@ -210,43 +199,108 @@ export class RemoteQuery {
   ): Promise<Record<string, unknown>[]> {
     if (!variables || records.length === 0) return records;
 
+    // Resolve the Link instance from the container (registered during app init)
+    const link = this.container.resolve<Link | undefined>(
+      "link",
+      { allowUnregistered: true }
+    );
+
     const links = this.getRelationships(entryPoint);
 
-    for (const link of links) {
-      const relatedKey = link.source === entryPoint ? link.target : link.source;
-      const fieldKey = relatedKey; // by convention, linked module data is keyed by module name
+    for (const rel of links) {
+      const relatedKey = rel.source === entryPoint ? rel.target : rel.source;
 
-      if (!variables[fieldKey]) continue;
+      // Only resolve if the field is requested in the selector
+      if (!variables[relatedKey]) continue;
 
       const relatedService = this.container.resolve<any>(
         `module:${relatedKey}`,
         { allowUnregistered: true }
       );
-      if (!relatedService) continue;
 
       const relatedSelector =
-        typeof variables[fieldKey] === "object"
-          ? (variables[fieldKey] as QueryFieldSelector)
+        typeof variables[relatedKey] === "object"
+          ? (variables[relatedKey] as QueryFieldSelector)
           : {};
 
-      // Collect IDs from the link registry store
-      // For now: attach empty array — full resolution requires the link store
       for (const record of records) {
-        if (!(fieldKey in record)) {
-          record[fieldKey] = [];
+        const recordId = record["id"] as string | undefined;
+        if (!recordId) {
+          record[relatedKey] = [];
+          continue;
         }
+
+        // Use the Link instance to resolve edge IDs
+        let relatedIds: string[] = [];
+
+        if (link) {
+          if (rel.source === entryPoint) {
+            relatedIds = await link.getTargetIds(rel.linkId, recordId);
+          } else {
+            relatedIds = await link.getSourceIds(rel.linkId, recordId);
+          }
+        }
+
+        if (relatedIds.length === 0 || !relatedService) {
+          record[relatedKey] = [];
+          continue;
+        }
+
+        // Fetch the related records by their IDs
+        const relatedRecords = await this.fetchRelatedByIds(
+          relatedService,
+          relatedIds,
+          relatedSelector
+        );
+
+        record[relatedKey] = relatedRecords;
       }
     }
 
     return records;
   }
+
+  private async fetchRelatedByIds(
+    service: any,
+    ids: string[],
+    selector: QueryFieldSelector
+  ): Promise<Record<string, unknown>[]> {
+    if (!service || ids.length === 0) return [];
+
+    // Try service methods that accept an ID list
+    for (const method of ["listByIds", "findByIds", "findMany"]) {
+      if (typeof service[method] === "function") {
+        try {
+          const result = await service[method](ids);
+          const raw = Array.isArray(result) ? result : [];
+          return Object.keys(selector).length > 0
+            ? raw.map((r: Record<string, unknown>) => this.project(r, selector))
+            : raw;
+        } catch {
+          break;
+        }
+      }
+    }
+
+    // Fallback: fetch by filter if only a generic list() is available
+    if (typeof service["list"] === "function") {
+      try {
+        const result = await service["list"]({ id: ids });
+        const raw = Array.isArray(result) ? result : [];
+        return Object.keys(selector).length > 0
+          ? raw.map((r: Record<string, unknown>) => this.project(r, selector))
+          : raw;
+      } catch {
+        return [];
+      }
+    }
+
+    return [];
+  }
 }
 
-// ── createQuery ───────────────────────────────────────────────────────────────
+// ── createQuery factory ───────────────────────────────────────────────────────
 
-/**
- * Factory helper — creates a `RemoteQuery` instance bound to the given container.
- */
 export function createQuery(container: MinimalContainer): RemoteQuery {
   return new RemoteQuery(container);
 }
