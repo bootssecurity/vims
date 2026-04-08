@@ -9,6 +9,8 @@ import { websitesModule } from "@vims/websites";
 import { redisCacheProvider } from "@vims/cache-redis";
 import { postgresProvider } from "@vims/database-postgres";
 import { localEventBusProvider } from "@vims/event-bus-local";
+import { redisEventBusProvider } from "@vims/event-bus-redis";
+import { redisLockingProvider } from "@vims/locking-redis";
 import { websiteBuilderPlugin } from "@vims/plugin-website-builder";
 export const workspaceCatalog = createFrameworkCatalog({
     modules: [
@@ -24,6 +26,8 @@ export const workspaceCatalog = createFrameworkCatalog({
         redisCacheProvider,
         postgresProvider,
         localEventBusProvider,
+        redisEventBusProvider,
+        redisLockingProvider,
     ],
     plugins: [
         websiteBuilderPlugin,

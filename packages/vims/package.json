@@ -90,6 +90,8 @@
     "@vims/crm": "0.1.0",
     "@vims/database-postgres": "0.1.0",
     "@vims/event-bus-local": "0.1.0",
+    "@vims/event-bus-redis": "0.1.0",
+    "@vims/locking-redis": "0.1.0",
     "@vims/framework": "0.1.0",
     "@vims/inventory": "0.1.0",
     "@vims/modules": "0.1.0",
