@@ -8,6 +8,35 @@ export type VimsAppConfig = VimsRuntimeConfig;
 
 export type VimsServiceMap = Record<string, unknown>;
 
+// ── Module key constants (parallel to Medusa's `Modules` enum) ──────────────
+export const VimsModules = {
+  EVENT_BUS: "eventBus",
+  CACHE: "cache",
+  WORKFLOW_ENGINE: "workflowEngine",
+} as const;
+
+export type VimsModuleKey = (typeof VimsModules)[keyof typeof VimsModules];
+
+// ── Declarative module config (what apps write in modulesConfig) ─────────────
+export type VimsModuleDeclaration = {
+  /** Package name or local path to resolve */
+  resolve?: string;
+  options?: Record<string, unknown>;
+  scope?: "internal" | "external";
+  /** Set to true to disable the module without removing it from config */
+  disabled?: boolean;
+};
+
+// ── Resolved module (output of registerVimsModule) ──────────────────────────
+export type VimsModuleResolution = {
+  /** Absolute path after require.resolve(), or false when disabled */
+  resolutionPath: string | false;
+  definition: VimsModuleDefinition;
+  dependencies: string[];
+  options: Record<string, unknown>;
+  moduleDeclaration: { scope: "internal" | "external" };
+};
+
 export type VimsProviderRuntimeContext = {
   config: VimsAppConfig;
 };
