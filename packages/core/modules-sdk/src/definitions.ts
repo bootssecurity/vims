@@ -9,7 +9,7 @@ import {
  * Mirrors Medusa's `ModulesDefinition` in @medusajs/modules-sdk.
  *
  * Each entry declares:
- *  - key:                    the canonical lookup key
+ *  - key:                    canonical lookup key
  *  - label:                  human-readable name for logs/errors
  *  - owner:                  the package that provides the default implementation
  *  - isRequired:             whether the framework refuses to start without it
@@ -18,11 +18,7 @@ import {
  *  - defaultModuleDeclaration: default scope used when apps don't override it
  *  - register:               placeholder — real impl comes from the resolved package
  */
-export const VimsModulesDefinition: Record<string, VimsModuleDefinition & {
-  isRequired: boolean;
-  defaultPackage: string | false;
-  defaultModuleDeclaration: { scope: "internal" | "external" };
-}> = {
+export const VimsModulesDefinition: Record<string, VimsModuleDefinition> = {
   [VimsModules.EVENT_BUS]: defineModule({
     key: VimsModules.EVENT_BUS,
     label: "EventBus",
@@ -31,7 +27,7 @@ export const VimsModulesDefinition: Record<string, VimsModuleDefinition & {
     defaultPackage: "@vims/event-bus",
     defaultModuleDeclaration: { scope: "internal" },
     register: () => ({}),
-  }) as any,
+  }),
 
   [VimsModules.CACHE]: defineModule({
     key: VimsModules.CACHE,
@@ -42,7 +38,7 @@ export const VimsModulesDefinition: Record<string, VimsModuleDefinition & {
     defaultModuleDeclaration: { scope: "internal" },
     dependsOn: [VimsModules.EVENT_BUS],
     register: () => ({}),
-  }) as any,
+  }),
 
   [VimsModules.WORKFLOW_ENGINE]: defineModule({
     key: VimsModules.WORKFLOW_ENGINE,
@@ -53,7 +49,7 @@ export const VimsModulesDefinition: Record<string, VimsModuleDefinition & {
     defaultModuleDeclaration: { scope: "internal" },
     dependsOn: [VimsModules.EVENT_BUS],
     register: () => ({}),
-  }) as any,
+  }),
 };
 
 export const MODULE_DEFINITIONS = Object.values(VimsModulesDefinition);
