@@ -17,7 +17,7 @@ import { VimsLinkRegistry } from "./index";
  *
  * // With durable persistence
  * const repo = new LinkRepository(db, linkPivots);
- * const link = new Link(VimsLinkRegistry, { repository: repo });
+ * const link = new Link(VimsLinkRegistry, { repository: repo, container: myContainer });
  *
  * await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
  * const links = await link.list({ crm: { id: "deal-1" } });
@@ -26,10 +26,11 @@ import { VimsLinkRegistry } from "./index";
  */
 export class Link {
     constructor(registry = VimsLinkRegistry, options = {}) {
-        var _a;
+        var _a, _b;
         this.store = new Map();
         this.relations = new Map();
         this.repo = (_a = options.repository) !== null && _a !== void 0 ? _a : null;
+        this.container = (_b = options.container) !== null && _b !== void 0 ? _b : null;
         this.buildRelations(registry);
     }
     // ── Public API ───────────────────────────────────────────────────────────────
@@ -185,7 +186,8 @@ export class Link {
      * If `deleteCascade: true` on the link definition, the cascade metadata
      * is included in the result for the caller to act on.
      *
-     * The Link class removes link edges only — it does not delete module records.
+     * If a container was injected, this method actively orchestrates the soft-delete
+     * cascading by resolving the target module service and invoking `.softDelete()`.
      */
     async delete(input) {
         var _a;
@@ -203,18 +205,35 @@ export class Link {
                     if (isSource) {
                         for (const sourceId of moduleIds) {
                             const targets = linkStore === null || linkStore === void 0 ? void 0 : linkStore.get(sourceId);
-                            if (isCascadeable && targets) {
+                            // Gather IDs that need to be cascaded before deleting the edge
+                            let cascadeIds = [];
+                            if (isCascadeable && targets && targets.size > 0) {
+                                cascadeIds = [...targets];
                                 const key = registration.target;
                                 const fk = (_a = registration.targetKey) !== null && _a !== void 0 ? _a : "id";
                                 if (!affected[key])
                                     affected[key] = {};
                                 if (!affected[key][fk])
                                     affected[key][fk] = [];
-                                affected[key][fk].push(...targets);
+                                affected[key][fk].push(...cascadeIds);
                             }
                             linkStore === null || linkStore === void 0 ? void 0 : linkStore.delete(sourceId);
                             if (this.repo) {
                                 await this.repo.deleteBySource(linkId, sourceId);
+                            }
+                            // Actively invoke softDelete if enabled
+                            if (cascadeIds.length > 0 && this.container) {
+                                const targetService = this.container.resolve(`module:${registration.target}`, { allowUnregistered: true });
+                                if (targetService) {
+                                    const method = typeof targetService.softDelete === "function"
+                                        ? "softDelete"
+                                        : typeof targetService.delete === "function"
+                                            ? "delete"
+                                            : null;
+                                    if (method) {
+                                        await targetService[method](cascadeIds);
+                                    }
+                                }
                             }
                         }
                     }

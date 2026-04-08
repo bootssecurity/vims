@@ -20,12 +20,21 @@ export type LinkCascadeResult = {
   errors: Array<{ module: string; key: string; error: Error }>;
 };
 
+type MinimalContainer = {
+  resolve<T = unknown>(key: string, opts?: { allowUnregistered?: boolean }): T;
+};
+
 export type LinkOptions = {
   /**
    * Injected repository for durable edge storage.
    * When omitted the `Link` operates in in-memory-only mode (no persistence).
    */
   repository?: LinkRepository;
+  /**
+   * Container for module service resolution.
+   * Required for active soft-delete cascades.
+   */
+  container?: MinimalContainer;
 };
 
 type RelationMeta = {
@@ -52,7 +61,7 @@ type RelationMeta = {
  *
  * // With durable persistence
  * const repo = new LinkRepository(db, linkPivots);
- * const link = new Link(VimsLinkRegistry, { repository: repo });
+ * const link = new Link(VimsLinkRegistry, { repository: repo, container: myContainer });
  *
  * await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
  * const links = await link.list({ crm: { id: "deal-1" } });
@@ -63,12 +72,14 @@ export class Link {
   private readonly store = new Map<string, Map<string, Set<string>>>();
   private relations = new Map<string, RelationMeta[]>();
   private readonly repo: LinkRepository | null;
+  private readonly container: MinimalContainer | null;
 
   constructor(
     registry: Map<string, VimsLinkRegistration> = VimsLinkRegistry,
     options: LinkOptions = {}
   ) {
     this.repo = options.repository ?? null;
+    this.container = options.container ?? null;
     this.buildRelations(registry);
   }
 
@@ -250,8 +261,9 @@ export class Link {
    * Delete all links sourced from the given module records.
    * If `deleteCascade: true` on the link definition, the cascade metadata
    * is included in the result for the caller to act on.
-   *
-   * The Link class removes link edges only — it does not delete module records.
+   * 
+   * If a container was injected, this method actively orchestrates the soft-delete
+   * cascading by resolving the target module service and invoking `.softDelete()`.
    */
   async delete(input: LinkDeleteInput): Promise<LinkCascadeResult> {
     const affected: Record<string, Record<string, string[]>> = {};
@@ -272,18 +284,40 @@ export class Link {
             for (const sourceId of moduleIds) {
               const targets = linkStore?.get(sourceId);
 
-              if (isCascadeable && targets) {
+              // Gather IDs that need to be cascaded before deleting the edge
+              let cascadeIds: string[] = [];
+              if (isCascadeable && targets && targets.size > 0) {
+                cascadeIds = [...targets];
                 const key = registration.target;
                 const fk = registration.targetKey ?? "id";
                 if (!affected[key]) affected[key] = {};
                 if (!affected[key][fk]) affected[key][fk] = [];
-                affected[key][fk].push(...targets);
+                affected[key][fk].push(...cascadeIds);
               }
 
               linkStore?.delete(sourceId);
 
               if (this.repo) {
                 await this.repo.deleteBySource(linkId, sourceId);
+              }
+
+              // Actively invoke softDelete if enabled
+              if (cascadeIds.length > 0 && this.container) {
+                const targetService = this.container.resolve<any>(
+                  `module:${registration.target}`,
+                  { allowUnregistered: true }
+                );
+                if (targetService) {
+                  const method = typeof targetService.softDelete === "function" 
+                    ? "softDelete" 
+                    : typeof targetService.delete === "function" 
+                    ? "delete" 
+                    : null;
+                  
+                  if (method) {
+                    await targetService[method](cascadeIds);
+                  }
+                }
               }
             }
           } else {

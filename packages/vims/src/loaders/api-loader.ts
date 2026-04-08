@@ -142,6 +142,7 @@ export class ApiLoader {
       await this.scanDir(sourceDir, sourceDir);
     }
 
+    this.sortRoutes();
     this.register();
     this.logger?.info("api.loader.loaded", { routeCount: this.routes.length });
   }
@@ -151,6 +152,35 @@ export class ApiLoader {
   }
 
   // ── Private ─────────────────────────────────────────────────────────────────
+
+  private sortRoutes(): void {
+    this.routes.sort((a, b) => {
+      const aParts = a.path.split("/").filter(Boolean);
+      const bParts = b.path.split("/").filter(Boolean);
+      const len = Math.max(aParts.length, bParts.length);
+
+      for (let i = 0; i < len; i++) {
+        const aPart = aParts[i];
+        const bPart = bParts[i];
+
+        if (aPart === undefined) return -1;
+        if (bPart === undefined) return 1;
+
+        const aIsParam = aPart.startsWith(":");
+        const bIsParam = bPart.startsWith(":");
+
+        if (aIsParam && !bIsParam) return 1;
+        if (!aIsParam && bIsParam) return -1;
+
+        if (aPart !== bPart) {
+          return aPart.localeCompare(bPart);
+        }
+      }
+
+      // If paths are identical, sort alphabetically by HTTP method (GET before POST, etc.)
+      return a.method.localeCompare(b.method);
+    });
+  }
 
   private async scanDir(rootDir: string, currentDir: string): Promise<void> {
     let entries: string[];
@@ -180,7 +210,24 @@ export class ApiLoader {
           if (basename !== "route") return;
           if (![".ts", ".js", ".mjs"].includes(extname(entry))) return;
 
-          await this.loadRouteFile(rootDir, fullPath);
+          // Check if middlewares.ts exists next to it
+          let middlewaresFile = fullPath.replace(/route\.(ts|js|mjs)$/, "middlewares.$1");
+          let middlewares: VimsMiddlewareHandler[] = [];
+          try {
+            const mwStat = await stat(middlewaresFile);
+            if (mwStat.isFile()) {
+              const mwMod = await import(middlewaresFile);
+              if (Array.isArray(mwMod.default)) {
+                middlewares = mwMod.default;
+              } else if (Array.isArray(mwMod.middlewares)) {
+                middlewares = mwMod.middlewares;
+              }
+            }
+          } catch {
+            // Ignored, middlewares file is purely optional
+          }
+
+          await this.loadRouteFile(rootDir, fullPath, middlewares);
         } catch {
           this.logger?.warn("api.loader.scan.error", { path: fullPath });
         }
@@ -188,7 +235,11 @@ export class ApiLoader {
     );
   }
 
-  private async loadRouteFile(rootDir: string, filePath: string): Promise<void> {
+  private async loadRouteFile(
+    rootDir: string,
+    filePath: string,
+    middlewares: VimsMiddlewareHandler[] = []
+  ): Promise<void> {
     try {
       const mod = await import(filePath);
 
@@ -212,10 +263,10 @@ export class ApiLoader {
         if (typeof handler !== "function") continue;
 
         this.routes.push({
-          path: urlPath,
+          path: urlPath || "/",
           method,
           handler,
-          middlewares: [],
+          middlewares: [...middlewares], // Pass down the array
           sourcePath: filePath,
         });
       }

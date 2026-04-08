@@ -17,12 +17,22 @@ export type LinkCascadeResult = {
         error: Error;
     }>;
 };
+type MinimalContainer = {
+    resolve<T = unknown>(key: string, opts?: {
+        allowUnregistered?: boolean;
+    }): T;
+};
 export type LinkOptions = {
     /**
      * Injected repository for durable edge storage.
      * When omitted the `Link` operates in in-memory-only mode (no persistence).
      */
     repository?: LinkRepository;
+    /**
+     * Container for module service resolution.
+     * Required for active soft-delete cascades.
+     */
+    container?: MinimalContainer;
 };
 /**
  * Link
@@ -41,7 +51,7 @@ export type LinkOptions = {
  *
  * // With durable persistence
  * const repo = new LinkRepository(db, linkPivots);
- * const link = new Link(VimsLinkRegistry, { repository: repo });
+ * const link = new Link(VimsLinkRegistry, { repository: repo, container: myContainer });
  *
  * await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
  * const links = await link.list({ crm: { id: "deal-1" } });
@@ -52,6 +62,7 @@ export declare class Link {
     private readonly store;
     private relations;
     private readonly repo;
+    private readonly container;
     constructor(registry?: Map<string, VimsLinkRegistration>, options?: LinkOptions);
     /**
      * Register (create) links between module records.
@@ -104,7 +115,8 @@ export declare class Link {
      * If `deleteCascade: true` on the link definition, the cascade metadata
      * is included in the result for the caller to act on.
      *
-     * The Link class removes link edges only — it does not delete module records.
+     * If a container was injected, this method actively orchestrates the soft-delete
+     * cascading by resolving the target module service and invoking `.softDelete()`.
      */
     delete(input: LinkDeleteInput): Promise<LinkCascadeResult>;
     /**
@@ -132,3 +144,4 @@ export declare class Link {
     private buildRelations;
     private findLinkId;
 }
+export {};

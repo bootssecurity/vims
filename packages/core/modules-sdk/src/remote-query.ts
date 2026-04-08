@@ -253,7 +253,14 @@ export class RemoteQuery {
           relatedSelector
         );
 
-        record[relatedKey] = relatedRecords;
+        // Recursively resolve links for the child records
+        const fullyResolvedRelated = await this.resolveLinks(
+          relatedKey,
+          relatedRecords,
+          relatedSelector
+        );
+
+        record[relatedKey] = fullyResolvedRelated;
       }
     }
 

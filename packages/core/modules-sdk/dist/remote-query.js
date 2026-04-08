@@ -155,7 +155,9 @@ export class RemoteQuery {
                 }
                 // Fetch the related records by their IDs
                 const relatedRecords = await this.fetchRelatedByIds(relatedService, relatedIds, relatedSelector);
-                record[relatedKey] = relatedRecords;
+                // Recursively resolve links for the child records
+                const fullyResolvedRelated = await this.resolveLinks(relatedKey, relatedRecords, relatedSelector);
+                record[relatedKey] = fullyResolvedRelated;
             }
         }
         return records;

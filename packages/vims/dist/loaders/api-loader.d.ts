@@ -96,6 +96,7 @@ export declare class ApiLoader {
     });
     load(): Promise<void>;
     getRoutes(): LoadedVimsRoute[];
+    private sortRoutes;
     private scanDir;
     private loadRouteFile;
     private register;

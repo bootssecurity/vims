@@ -56,6 +56,7 @@ export class ApiLoader {
         for (const sourceDir of this.sourceDirs) {
             await this.scanDir(sourceDir, sourceDir);
         }
+        this.sortRoutes();
         this.register();
         (_a = this.logger) === null || _a === void 0 ? void 0 : _a.info("api.loader.loaded", { routeCount: this.routes.length });
     }
@@ -63,6 +64,32 @@ export class ApiLoader {
         return [...this.routes];
     }
     // ── Private ─────────────────────────────────────────────────────────────────
+    sortRoutes() {
+        this.routes.sort((a, b) => {
+            const aParts = a.path.split("/").filter(Boolean);
+            const bParts = b.path.split("/").filter(Boolean);
+            const len = Math.max(aParts.length, bParts.length);
+            for (let i = 0; i < len; i++) {
+                const aPart = aParts[i];
+                const bPart = bParts[i];
+                if (aPart === undefined)
+                    return -1;
+                if (bPart === undefined)
+                    return 1;
+                const aIsParam = aPart.startsWith(":");
+                const bIsParam = bPart.startsWith(":");
+                if (aIsParam && !bIsParam)
+                    return 1;
+                if (!aIsParam && bIsParam)
+                    return -1;
+                if (aPart !== bPart) {
+                    return aPart.localeCompare(bPart);
+                }
+            }
+            // If paths are identical, sort alphabetically by HTTP method (GET before POST, etc.)
+            return a.method.localeCompare(b.method);
+        });
+    }
     async scanDir(rootDir, currentDir) {
         let entries;
         try {
@@ -88,14 +115,32 @@ export class ApiLoader {
                     return;
                 if (![".ts", ".js", ".mjs"].includes(extname(entry)))
                     return;
-                await this.loadRouteFile(rootDir, fullPath);
+                // Check if middlewares.ts exists next to it
+                let middlewaresFile = fullPath.replace(/route\.(ts|js|mjs)$/, "middlewares.$1");
+                let middlewares = [];
+                try {
+                    const mwStat = await stat(middlewaresFile);
+                    if (mwStat.isFile()) {
+                        const mwMod = await import(middlewaresFile);
+                        if (Array.isArray(mwMod.default)) {
+                            middlewares = mwMod.default;
+                        }
+                        else if (Array.isArray(mwMod.middlewares)) {
+                            middlewares = mwMod.middlewares;
+                        }
+                    }
+                }
+                catch (_b) {
+                    // Ignored, middlewares file is purely optional
+                }
+                await this.loadRouteFile(rootDir, fullPath, middlewares);
             }
-            catch (_b) {
+            catch (_c) {
                 (_a = this.logger) === null || _a === void 0 ? void 0 : _a.warn("api.loader.scan.error", { path: fullPath });
             }
         }));
     }
-    async loadRouteFile(rootDir, filePath) {
+    async loadRouteFile(rootDir, filePath, middlewares = []) {
         var _a;
         try {
             const mod = await import(filePath);
@@ -116,10 +161,10 @@ export class ApiLoader {
                 if (typeof handler !== "function")
                     continue;
                 this.routes.push({
-                    path: urlPath,
+                    path: urlPath || "/",
                     method,
                     handler,
-                    middlewares: [],
+                    middlewares: [...middlewares], // Pass down the array
                     sourcePath: filePath,
                 });
             }

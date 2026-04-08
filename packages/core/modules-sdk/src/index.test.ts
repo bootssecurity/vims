@@ -588,4 +588,29 @@ describe("Link with LinkRepository", () => {
     await link.hydrate(linkId);
     expect(link.dump()).toHaveLength(1);
   });
+
+  it("delete() actively triggers softDelete on target module if container provided", async () => {
+    createModuleLink({ source: "crm", target: "inventory", relationship: "one-to-many", deleteCascade: true });
+    
+    // Mock target service with a softDelete method
+    const mockInventoryService = {
+      softDelete: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mockContainer = {
+      resolve: (key: string) => {
+        if (key === "module:inventory") return mockInventoryService as any;
+        return null as any;
+      }
+    };
+
+    const repo = new LinkRepository();
+    const link = new Link(VimsLinkRegistry, { repository: repo, container: mockContainer });
+    
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+    await link.delete({ crm: { id: ["deal-1"] } });
+
+    expect(mockInventoryService.softDelete).toHaveBeenCalledWith(["prod-1"]);
+  });
 });
+
