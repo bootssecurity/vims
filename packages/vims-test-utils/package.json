@@ -1,0 +1,63 @@
+{
+  "name": "@vims/test-utils",
+  "version": "0.1.0",
+  "description": "Shared test harnesses and fixtures for VIMS framework packages.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vims-dev/vims.git",
+    "directory": "packages/vims-test-utils"
+  },
+  "homepage": "https://github.com/vims-dev/vims/tree/main/packages/vims-test-utils",
+  "bugs": {
+    "url": "https://github.com/vims-dev/vims/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./database": {
+      "types": "./dist/database.d.ts",
+      "default": "./dist/database.js"
+    },
+    "./events": {
+      "types": "./dist/events.d.ts",
+      "default": "./dist/events.js"
+    },
+    "./init-modules": {
+      "types": "./dist/init-modules.d.ts",
+      "default": "./dist/init-modules.js"
+    },
+    "./module-test-runner": {
+      "types": "./dist/module-test-runner.d.ts",
+      "default": "./dist/module-test-runner.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vims/audit": "0.1.0",
+    "@vims/auth": "0.1.0",
+    "@vims/cache-redis": "0.1.0",
+    "@vims/config": "0.1.0",
+    "@vims/crm": "0.1.0",
+    "@vims/database-postgres": "0.1.0",
+    "@vims/event-bus-local": "0.1.0",
+    "@vims/framework": "0.1.0",
+    "@vims/inventory": "0.1.0",
+    "@vims/orchestration": "0.1.0",
+    "@vims/rbac": "0.1.0",
+    "@vims/tenancy": "0.1.0",
+    "@vims/websites": "0.1.0"
+  }
+}

@@ -1,34 +1,96 @@
 {
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
+  "extends": "./tsconfig.base.json",
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./packages/cli/create-vims-app"
+    },
+    {
+      "path": "./packages/core/config"
+    },
+    {
+      "path": "./packages/core/container"
+    },
+    {
+      "path": "./packages/core/events"
+    },
+    {
+      "path": "./packages/core/logger"
+    },
+    {
+      "path": "./packages/core/orchestration"
+    },
+    {
+      "path": "./packages/core/policies"
+    },
+    {
+      "path": "./packages/core/workflows"
+    },
+    {
+      "path": "./packages/core/framework"
+    },
+    {
+      "path": "./packages/core/types"
+    },
+    {
+      "path": "./packages/core/utils"
+    },
+    {
+      "path": "./packages/vims-test-utils"
+    },
+    {
+      "path": "./packages/design-system/ui"
+    },
+    {
+      "path": "./packages/vims"
+    },
+    {
+      "path": "./packages/core/core-flows"
+    },
+    {
+      "path": "./packages/core/modules-sdk"
+    },
+    {
+      "path": "./packages/core/workflows-sdk"
+    },
+    {
+      "path": "./packages/modules/audit"
+    },
+    {
+      "path": "./packages/modules/auth"
+    },
+    {
+      "path": "./packages/modules/crm"
+    },
+    {
+      "path": "./packages/modules/inventory"
+    },
+    {
+      "path": "./packages/modules/rbac"
+    },
+    {
+      "path": "./packages/modules/tenancy"
+    },
+    {
+      "path": "./packages/modules/websites"
+    },
+    {
+      "path": "./packages/modules/providers/cache-redis"
+    },
+    {
+      "path": "./packages/modules/providers/event-bus-local"
+    },
+    {
+      "path": "./packages/modules/providers/database-postgres"
+    },
+    {
+      "path": "./packages/modules/index"
+    },
+    {
+      "path": "./packages/plugins/website-builder"
     }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules"]
+  ]
 }

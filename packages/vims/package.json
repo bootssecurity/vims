@@ -1,0 +1,106 @@
+{
+  "name": "@vims/vims",
+  "version": "0.1.0",
+  "description": "Distribution package that assembles the VIMS modules, providers, loaders, and operational surfaces.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vims-dev/vims.git",
+    "directory": "packages/vims"
+  },
+  "homepage": "https://github.com/vims-dev/vims/tree/main/packages/vims",
+  "bugs": {
+    "url": "https://github.com/vims-dev/vims/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./commands": {
+      "types": "./dist/commands/index.d.ts",
+      "default": "./dist/commands/index.js"
+    },
+    "./feature-flags": {
+      "types": "./dist/feature-flags/index.d.ts",
+      "default": "./dist/feature-flags/index.js"
+    },
+    "./flows": {
+      "types": "./dist/flows/index.d.ts",
+      "default": "./dist/flows/index.js"
+    },
+    "./jobs": {
+      "types": "./dist/jobs/index.d.ts",
+      "default": "./dist/jobs/index.js"
+    },
+    "./loaders": {
+      "types": "./dist/loaders/index.d.ts",
+      "default": "./dist/loaders/index.js"
+    },
+    "./modules": {
+      "types": "./dist/modules/index.d.ts",
+      "default": "./dist/modules/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/index.d.ts",
+      "default": "./dist/plugins/index.js"
+    },
+    "./policies": {
+      "types": "./dist/policies/index.d.ts",
+      "default": "./dist/policies/index.js"
+    },
+    "./sdk/modules": {
+      "types": "./dist/sdk/modules/index.d.ts",
+      "default": "./dist/sdk/modules/index.js"
+    },
+    "./sdk/workflows": {
+      "types": "./dist/sdk/workflows/index.d.ts",
+      "default": "./dist/sdk/workflows/index.js"
+    },
+    "./subscribers": {
+      "types": "./dist/subscribers/index.d.ts",
+      "default": "./dist/subscribers/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "default": "./dist/utils/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vims/audit": "0.1.0",
+    "@vims/auth": "0.1.0",
+    "@vims/cache-redis": "0.1.0",
+    "@vims/core-flows": "0.1.0",
+    "@vims/config": "0.1.0",
+    "@vims/crm": "0.1.0",
+    "@vims/database-postgres": "0.1.0",
+    "@vims/event-bus-local": "0.1.0",
+    "@vims/framework": "0.1.0",
+    "@vims/inventory": "0.1.0",
+    "@vims/modules": "0.1.0",
+    "@vims/modules-sdk": "0.1.0",
+    "@vims/policies": "0.1.0",
+    "@vims/plugin-website-builder": "0.1.0",
+    "@vims/rbac": "0.1.0",
+    "@vims/tenancy": "0.1.0",
+    "@vims/types": "0.1.0",
+    "@vims/utils": "0.1.0",
+    "@vims/websites": "0.1.0",
+    "@vims/workflows-sdk": "0.1.0"
+  }
+}

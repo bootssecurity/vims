@@ -1,0 +1,23 @@
+{
+  "name": "@vims/integration-tests-modules",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vims/audit": "0.1.0",
+    "@vims/auth": "0.1.0",
+    "@vims/cache-redis": "0.1.0",
+    "@vims/config": "0.1.0",
+    "@vims/crm": "0.1.0",
+    "@vims/database-postgres": "0.1.0",
+    "@vims/event-bus-local": "0.1.0",
+    "@vims/framework": "0.1.0",
+    "@vims/inventory": "0.1.0",
+    "@vims/rbac": "0.1.0",
+    "@vims/tenancy": "0.1.0",
+    "@vims/test-utils": "0.1.0",
+    "@vims/websites": "0.1.0"
+  }
+}

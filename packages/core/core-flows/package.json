@@ -1,0 +1,35 @@
+{
+  "name": "@vims/core-flows",
+  "version": "0.1.0",
+  "description": "Core platform flows that compose VIMS workflow and orchestration primitives.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vims-dev/vims.git",
+    "directory": "packages/core/core-flows"
+  },
+  "homepage": "https://github.com/vims-dev/vims/tree/main/packages/core/core-flows",
+  "bugs": {
+    "url": "https://github.com/vims-dev/vims/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../../scripts/build-package.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vims/workflows-sdk": "0.1.0"
+  }
+}

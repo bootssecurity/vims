@@ -1,0 +1,41 @@
+{
+  "name": "@vims/plugin-website-builder",
+  "version": "0.1.0",
+  "description": "Website builder plugin surface for dealer-facing VIMS websites.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vims-dev/vims.git",
+    "directory": "packages/plugins/website-builder"
+  },
+  "homepage": "https://github.com/vims-dev/vims/tree/main/packages/plugins/website-builder",
+  "bugs": {
+    "url": "https://github.com/vims-dev/vims/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../../scripts/build-package.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vims/core-flows": "0.1.0",
+    "@vims/modules-sdk": "0.1.0",
+    "@vims/websites": "0.1.0"
+  },
+  "vims": {
+    "kind": "plugin",
+    "exportName": "websiteBuilderPlugin"
+  }
+}

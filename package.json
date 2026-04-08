@@ -1,27 +1,67 @@
 {
-  "name": "vims",
+  "name": "vims-platform",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vims-dev/vims.git"
   },
-  "dependencies": {
-    "next": "16.2.2",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+  "homepage": "https://github.com/vims-dev/vims",
+  "bugs": {
+    "url": "https://github.com/vims-dev/vims/issues"
+  },
+  "packageManager": "npm@11.8.0",
+  "workspaces": [
+    "apps/*",
+    "packages/vims",
+    "packages/vims-test-utils",
+    "packages/cli/*",
+    "packages/core/*",
+    "packages/modules/*",
+    "packages/modules/providers/*",
+    "packages/plugins/*",
+    "packages/design-system/*",
+    "integration-tests/*"
+  ],
+  "scripts": {
+    "prebuild:packages": "npm run framework:registry",
+    "build:packages": "turbo run build --filter=!@vims/web --filter=!@vims/api --filter=!@vims/worker",
+    "predev": "npm run build:packages",
+    "dev": "npm run dev --workspace=@vims/web",
+    "prebuild": "npm run framework:registry",
+    "build": "turbo run build",
+    "prestart": "npm run build:packages",
+    "start": "npm run start --workspace=@vims/web",
+    "prelint": "npm run build:packages",
+    "lint": "turbo run lint typecheck --continue",
+    "lint:web": "npm run lint --workspace=@vims/web",
+    "pretypecheck": "npm run build:packages",
+    "typecheck": "turbo run typecheck",
+    "pretest": "npm run build:packages",
+    "test": "vitest",
+    "pretest:run": "npm run build:packages",
+    "test:run": "vitest run",
+    "db:up": "docker compose up -d postgres redis",
+    "db:down": "docker compose down",
+    "db:generate": "node scripts/db-generate.mjs",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:studio": "drizzle-kit studio",
+    "framework:registry": "node scripts/generate-workspace-registry.mjs",
+    "changeset": "changeset",
+    "version:packages": "changeset version",
+    "release:publish": "changeset publish"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "@changesets/cli": "^2.30.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "drizzle-kit": "^0.31.4",
+    "jsdom": "^29.0.2",
+    "turbo": "^2.5.6",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.3"
   }
 }

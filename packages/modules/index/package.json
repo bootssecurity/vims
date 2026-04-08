@@ -1,0 +1,44 @@
+{
+  "name": "@vims/modules",
+  "version": "0.1.0",
+  "description": "Module and provider index for the VIMS platform runtime.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vims-dev/vims.git",
+    "directory": "packages/modules/index"
+  },
+  "homepage": "https://github.com/vims-dev/vims/tree/main/packages/modules/index",
+  "bugs": {
+    "url": "https://github.com/vims-dev/vims/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../../scripts/build-package.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vims/audit": "0.1.0",
+    "@vims/auth": "0.1.0",
+    "@vims/cache-redis": "0.1.0",
+    "@vims/crm": "0.1.0",
+    "@vims/database-postgres": "0.1.0",
+    "@vims/event-bus-local": "0.1.0",
+    "@vims/inventory": "0.1.0",
+    "@vims/rbac": "0.1.0",
+    "@vims/tenancy": "0.1.0",
+    "@vims/websites": "0.1.0"
+  }
+}
