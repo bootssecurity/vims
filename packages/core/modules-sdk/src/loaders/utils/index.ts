@@ -1,1 +1,1 @@
-export { loadVimsInternalModule } from "./load-internal";
+export { loadVimsInternalModule } from "./load-internal.js";

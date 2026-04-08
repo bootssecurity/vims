@@ -1,5 +1,5 @@
-import { VimsLinkRegistry, type VimsLinkRegistration } from "./index";
-import { LinkRepository } from "./db/link-repository";
+import { VimsLinkRegistry, type VimsLinkRegistration } from "./index.js";
+import { LinkRepository } from "./db/link-repository.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

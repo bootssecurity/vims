@@ -1,5 +1,5 @@
-import { registerVimsModule } from "./loaders";
-import { vimsModuleLoader } from "./loaders/module-loader";
+import { registerVimsModule } from "./loaders/index.js";
+import { vimsModuleLoader } from "./loaders/module-loader.js";
 // ── Simple deterministic hash ─────────────────────────────────────────────────
 function simpleHash(obj) {
     const str = JSON.stringify(obj);

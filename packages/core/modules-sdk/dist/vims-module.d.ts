@@ -1,5 +1,5 @@
 import type { VimsModuleResolution } from "@vims/framework";
-import { type RegisterVimsModuleArgs } from "./loaders";
+import { type RegisterVimsModuleArgs } from "./loaders/index.js";
 type MinimalContainer = {
     register(key: string, value: unknown): void;
     resolve<T = unknown>(key: string, opts?: {

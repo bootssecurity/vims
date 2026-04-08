@@ -1,1 +1,1 @@
-export { bootFramework, createVimsApp, defineAppConfig } from "./runtime";
+export { bootFramework, createVimsApp, defineAppConfig } from "./runtime.js";

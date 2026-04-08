@@ -1,7 +1,7 @@
 import { createVimsApp, createVimsAppAsync, } from "@vims/framework";
 import { loadVimsConfig } from "@vims/config";
 import { VimsModule } from "@vims/modules-sdk";
-import { discoverWorkspaceManifest } from "../generated/workspace-catalog";
+import { discoverWorkspaceManifest } from "../generated/workspace-catalog.js";
 export function loadVimsAppSnapshot(overrides = {}) {
     const config = loadVimsConfig(overrides);
     return createVimsApp(discoverWorkspaceManifest(config), config);
@@ -41,7 +41,7 @@ export async function loadVimsAppModules(modulesConfig, opts = {}) {
     }
     return allModules;
 }
-export { initializeVimsApp } from "./app";
-export { LinkLoader } from "./link-loader";
-export { ApiLoader } from "./api-loader";
-export { VimsMiddlewarePipeline, requestLogger, attachState, guard, } from "./middleware-pipeline";
+export { initializeVimsApp } from "./app.js";
+export { LinkLoader } from "./link-loader.js";
+export { ApiLoader } from "./api-loader.js";
+export { VimsMiddlewarePipeline, requestLogger, attachState, guard, } from "./middleware-pipeline.js";

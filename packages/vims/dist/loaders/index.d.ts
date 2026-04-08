@@ -20,10 +20,10 @@ export declare function loadVimsApp(overrides?: Partial<VimsAppConfig>): Promise
 export declare function loadVimsAppModules(modulesConfig: VimsModuleConfig, opts?: {
     cwd?: string;
 }): Promise<Record<string, unknown>>;
-export { initializeVimsApp } from "./app";
-export type { VimsAppInitOptions, VimsAppOutput } from "./app";
-export { LinkLoader } from "./link-loader";
-export { ApiLoader } from "./api-loader";
-export type { LoadedVimsRoute, VimsRouteHandler, VimsMiddlewareHandler, VimsRequest, VimsResponse, VimsRouter, HttpMethod, } from "./api-loader";
-export { VimsMiddlewarePipeline, requestLogger, attachState, guard, } from "./middleware-pipeline";
-export type { PipelineContext, PipelineMiddleware, MiddlewareBuilderFn, } from "./middleware-pipeline";
+export { initializeVimsApp } from "./app.js";
+export type { VimsAppInitOptions, VimsAppOutput } from "./app.js";
+export { LinkLoader } from "./link-loader.js";
+export { ApiLoader } from "./api-loader.js";
+export type { LoadedVimsRoute, VimsRouteHandler, VimsMiddlewareHandler, VimsRequest, VimsResponse, VimsRouter, HttpMethod, } from "./api-loader.js";
+export { VimsMiddlewarePipeline, requestLogger, attachState, guard, } from "./middleware-pipeline.js";
+export type { PipelineContext, PipelineMiddleware, MiddlewareBuilderFn, } from "./middleware-pipeline.js";

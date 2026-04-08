@@ -3,7 +3,7 @@ import type {
   VimsModuleDeclaration,
   VimsModuleResolution,
 } from "@vims/framework";
-import { VimsModulesDefinition } from "../definitions";
+import { VimsModulesDefinition } from "../definitions.js";
 
 export type RegisterVimsModuleArgs = {
   moduleKey: string;

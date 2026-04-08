@@ -57,13 +57,13 @@ export function createPluginDefinition<
   return definePlugin(definition);
 }
 
-export * from "./loaders/index";
-export * from "./vims-module";
-export * from "./definitions";
-export * from "./link";
-export * from "./remote-query";
-export { LinkRepository } from "./db/link-repository";
-export type { LinkEdge, LinkFilter } from "./db/link-repository";
-export { linkPivots } from "./db/link-pivot-schema";
-export type { InsertLinkPivot, SelectLinkPivot } from "./db/link-pivot-schema";
-export type { DiscoveredSchema } from "./loaders/utils/load-internal";
+export * from "./loaders/index.js";
+export * from "./vims-module.js";
+export * from "./definitions.js";
+export * from "./link.js";
+export * from "./remote-query.js";
+export { LinkRepository } from "./db/link-repository.js";
+export type { LinkEdge, LinkFilter } from "./db/link-repository.js";
+export { linkPivots } from "./db/link-pivot-schema.js";
+export type { InsertLinkPivot, SelectLinkPivot } from "./db/link-pivot-schema.js";
+export type { DiscoveredSchema } from "./loaders/utils/load-internal.js";

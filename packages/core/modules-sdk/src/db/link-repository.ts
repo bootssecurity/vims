@@ -1,4 +1,4 @@
-import type { linkPivots, InsertLinkPivot, SelectLinkPivot } from "./link-pivot-schema";
+import type { linkPivots, InsertLinkPivot, SelectLinkPivot } from "./link-pivot-schema.js";
 
 // ── Drizzle db shape (minimal interface, not bound to a specific db instance) ──
 

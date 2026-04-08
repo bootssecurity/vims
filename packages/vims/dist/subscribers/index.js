@@ -1,4 +1,4 @@
-export { SubscriberLoader } from "./loader";
+export { SubscriberLoader } from "./loader.js";
 // Legacy stub — kept for backward compatibility
 export const vimsSubscribers = [
     "inventory.updated",

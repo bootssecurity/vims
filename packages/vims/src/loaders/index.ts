@@ -6,7 +6,7 @@ import {
 } from "@vims/framework";
 import { loadVimsConfig } from "@vims/config";
 import { VimsModule } from "@vims/modules-sdk";
-import { discoverWorkspaceManifest } from "../generated/workspace-catalog";
+import { discoverWorkspaceManifest } from "../generated/workspace-catalog.js";
 
 /**
  * Declarative module config — what apps pass to `loadVimsAppModules()`.
@@ -67,10 +67,10 @@ export async function loadVimsAppModules(
   return allModules;
 }
 
-export { initializeVimsApp } from "./app";
-export type { VimsAppInitOptions, VimsAppOutput } from "./app";
-export { LinkLoader } from "./link-loader";
-export { ApiLoader } from "./api-loader";
+export { initializeVimsApp } from "./app.js";
+export type { VimsAppInitOptions, VimsAppOutput } from "./app.js";
+export { LinkLoader } from "./link-loader.js";
+export { ApiLoader } from "./api-loader.js";
 export type {
   LoadedVimsRoute,
   VimsRouteHandler,
@@ -79,15 +79,15 @@ export type {
   VimsResponse,
   VimsRouter,
   HttpMethod,
-} from "./api-loader";
+} from "./api-loader.js";
 export {
   VimsMiddlewarePipeline,
   requestLogger,
   attachState,
   guard,
-} from "./middleware-pipeline";
+} from "./middleware-pipeline.js";
 export type {
   PipelineContext,
   PipelineMiddleware,
   MiddlewareBuilderFn,
-} from "./middleware-pipeline";
+} from "./middleware-pipeline.js";

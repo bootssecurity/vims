@@ -1,4 +1,4 @@
-import type { VimsRequest, VimsResponse, VimsMiddlewareHandler } from "./api-loader";
+import type { VimsRequest, VimsResponse, VimsMiddlewareHandler } from "./api-loader.js";
 export type PipelineContext = {
     req: VimsRequest;
     res: VimsResponse;

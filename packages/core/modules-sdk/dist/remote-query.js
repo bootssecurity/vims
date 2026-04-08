@@ -1,4 +1,4 @@
-import { VimsLinkRegistry } from "./index";
+import { VimsLinkRegistry } from "./index.js";
 // ── RemoteQuery ───────────────────────────────────────────────────────────────
 /**
  * RemoteQuery

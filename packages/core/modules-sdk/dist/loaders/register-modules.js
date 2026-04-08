@@ -1,4 +1,4 @@
-import { VimsModulesDefinition } from "../definitions";
+import { VimsModulesDefinition } from "../definitions.js";
 /**
  * Resolves a module key + declaration into a `VimsModuleResolution`.
  *

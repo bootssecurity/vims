@@ -1,3 +1,3 @@
-export * from "./base-entity";
-export * from "./mikro-orm-repository";
-export * from "./mikro-orm-create-connection";
+export * from "./base-entity.js";
+export * from "./mikro-orm-repository.js";
+export * from "./mikro-orm-create-connection.js";

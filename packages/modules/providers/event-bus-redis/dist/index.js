@@ -1,5 +1,5 @@
 import { defineProvider } from "@vims/framework";
-import { RedisEventBus } from "./event-bus";
+import { RedisEventBus } from "./event-bus.js";
 export const redisEventBusProvider = defineProvider({
     key: "event-bus-redis",
     label: "Redis Event Bus",

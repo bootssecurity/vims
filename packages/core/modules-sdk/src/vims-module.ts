@@ -1,6 +1,6 @@
 import type { VimsModuleDefinition, VimsModuleResolution } from "@vims/framework";
-import { registerVimsModule, type RegisterVimsModuleArgs } from "./loaders";
-import { vimsModuleLoader } from "./loaders/module-loader";
+import { registerVimsModule, type RegisterVimsModuleArgs } from "./loaders/index.js";
+import { vimsModuleLoader } from "./loaders/module-loader.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

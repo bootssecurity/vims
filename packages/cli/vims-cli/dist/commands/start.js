@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import { initializeVimsApp } from "@vims/vims/loaders";
-import { buildCorsOrigins, isCorsAllowed, handlePostgresError } from "@vims/utils";
+import { parseCorsOrigins, isCorsAllowed, handlePostgresError } from "@vims/utils";
 export async function startCommand(options) {
     const port = parseInt(options.port, 10) || 9000;
     console.log(`Starting VIMS Backend on port ${port}...`);
     const app = express();
-    const allowedOrigins = buildCorsOrigins();
+    const allowedOrigins = parseCorsOrigins(process.env.ADMIN_CORS || "http://localhost:7000");
     app.use(cors({
         origin: (origin, callback) => {
             if (!origin || isCorsAllowed(origin, allowedOrigins)) {
@@ -38,8 +38,8 @@ export async function startCommand(options) {
             let message = err.message || "An unexpected error occurred.";
             if (err.name === "VimsError") {
                 statusCode = 400;
-                if (err.type === Vimfound)
-                    ") statusCode = 404;;
+                if (err.type === "not_found")
+                    statusCode = 404;
                 if (err.type === "unauthorized")
                     statusCode = 401;
                 errorType = err.type;

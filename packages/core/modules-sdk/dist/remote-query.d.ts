@@ -1,4 +1,4 @@
-import type { DiscoveredSchema } from "./loaders/utils/load-internal";
+import type { DiscoveredSchema } from "./loaders/utils/load-internal.js";
 export type QueryFieldSelector = {
     [field: string]: boolean | QueryFieldSelector;
 };

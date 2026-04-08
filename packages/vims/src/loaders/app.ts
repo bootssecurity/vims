@@ -8,13 +8,13 @@ import {
   type VimsAsyncFrameworkRuntime,
 } from "@vims/framework";
 import { VimsModule, Link, createQuery, type RemoteQuery } from "@vims/modules-sdk";
-import { SubscriberLoader } from "../subscribers/loader";
-import { JobLoader } from "../jobs/loader";
-import { WorkflowLoader } from "../flows/loader";
-import { LinkLoader } from "./link-loader";
-import { ApiLoader, type VimsRouter } from "./api-loader";
-import { discoverWorkspaceManifest } from "../generated/workspace-catalog";
-import type { VimsModuleConfig } from "./index";
+import { SubscriberLoader } from "../subscribers/loader.js";
+import { JobLoader } from "../jobs/loader.js";
+import { WorkflowLoader } from "../flows/loader.js";
+import { LinkLoader } from "./link-loader.js";
+import { ApiLoader, type VimsRouter } from "./api-loader.js";
+import { discoverWorkspaceManifest } from "../generated/workspace-catalog.js";
+import type { VimsModuleConfig } from "./index.js";
 
 export type VimsAppInitOptions = {
   /** Absolute path to the project root (defaults to cwd) */
@@ -118,7 +118,7 @@ export async function initializeVimsApp(
 
   // 4. Bootstrap declarative modules if config provided
   if (modulesConfig) {
-    const { loadVimsAppModules } = await import("./index");
+    const { loadVimsAppModules } = await import("./index.js");
     await loadVimsAppModules(modulesConfig, { cwd: directory });
   }
 

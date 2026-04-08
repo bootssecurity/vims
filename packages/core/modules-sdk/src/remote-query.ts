@@ -1,6 +1,6 @@
-import type { DiscoveredSchema } from "./loaders/utils/load-internal";
-import { VimsLinkRegistry } from "./index";
-import type { Link } from "./link";
+import type { DiscoveredSchema } from "./loaders/utils/load-internal.js";
+import { VimsLinkRegistry } from "./index.js";
+import type { Link } from "./link.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

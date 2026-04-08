@@ -1,5 +1,5 @@
-import { type VimsLinkRegistration } from "./index";
-import { LinkRepository } from "./db/link-repository";
+import { type VimsLinkRegistration } from "./index.js";
+import { LinkRepository } from "./db/link-repository.js";
 export type LinkDeleteInput = {
     [moduleKey: string]: Record<string, string | string[]>;
 };

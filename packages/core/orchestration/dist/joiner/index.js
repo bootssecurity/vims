@@ -1,1 +1,1 @@
-export * from "./remote-joiner";
+export * from "./remote-joiner.js";

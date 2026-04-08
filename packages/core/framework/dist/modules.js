@@ -1,1 +1,1 @@
-export { createFrameworkCatalog, createFrameworkManifest, createModuleRegistry, createProviderRegistry, defineModule, defineProvider, discoverManifest, } from "./runtime";
+export { createFrameworkCatalog, createFrameworkManifest, createModuleRegistry, createProviderRegistry, defineModule, defineProvider, discoverManifest, } from "./runtime.js";

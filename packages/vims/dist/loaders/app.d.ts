@@ -1,11 +1,11 @@
 import { type VimsAppConfig, type VimsAsyncFrameworkRuntime } from "@vims/framework";
 import { Link, type RemoteQuery } from "@vims/modules-sdk";
-import { SubscriberLoader } from "../subscribers/loader";
-import { JobLoader } from "../jobs/loader";
-import { WorkflowLoader } from "../flows/loader";
-import { LinkLoader } from "./link-loader";
-import { ApiLoader, type VimsRouter } from "./api-loader";
-import type { VimsModuleConfig } from "./index";
+import { SubscriberLoader } from "../subscribers/loader.js";
+import { JobLoader } from "../jobs/loader.js";
+import { WorkflowLoader } from "../flows/loader.js";
+import { LinkLoader } from "./link-loader.js";
+import { ApiLoader, type VimsRouter } from "./api-loader.js";
+import type { VimsModuleConfig } from "./index.js";
 export type VimsAppInitOptions = {
     /** Absolute path to the project root (defaults to cwd) */
     directory?: string;

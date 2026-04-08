@@ -1,2 +1,2 @@
 export { formatNumber } from "@vims/utils";
-export * from "./validators";
+export * from "./validators.js";

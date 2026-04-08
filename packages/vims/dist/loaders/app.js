@@ -2,12 +2,12 @@ import { join } from "path";
 import { loadVimsConfig, } from "@vims/config";
 import { bootFrameworkAsync, } from "@vims/framework";
 import { VimsModule, Link, createQuery } from "@vims/modules-sdk";
-import { SubscriberLoader } from "../subscribers/loader";
-import { JobLoader } from "../jobs/loader";
-import { WorkflowLoader } from "../flows/loader";
-import { LinkLoader } from "./link-loader";
-import { ApiLoader } from "./api-loader";
-import { discoverWorkspaceManifest } from "../generated/workspace-catalog";
+import { SubscriberLoader } from "../subscribers/loader.js";
+import { JobLoader } from "../jobs/loader.js";
+import { WorkflowLoader } from "../flows/loader.js";
+import { LinkLoader } from "./link-loader.js";
+import { ApiLoader } from "./api-loader.js";
+import { discoverWorkspaceManifest } from "../generated/workspace-catalog.js";
 /**
  * Top-level VIMS application initializer.
  *
@@ -32,7 +32,7 @@ export async function initializeVimsApp(options = {}) {
     const runtime = await bootFrameworkAsync(manifest, config);
     // 4. Bootstrap declarative modules if config provided
     if (modulesConfig) {
-        const { loadVimsAppModules } = await import("./index");
+        const { loadVimsAppModules } = await import("./index.js");
         await loadVimsAppModules(modulesConfig, { cwd: directory });
     }
     // 5. Load links

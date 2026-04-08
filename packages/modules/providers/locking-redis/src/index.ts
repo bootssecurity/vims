@@ -1,5 +1,5 @@
 import { defineProvider } from "@vims/framework";
-import { RedisLocking } from "./locking";
+import { RedisLocking } from "./locking.js";
 
 export const redisLockingProvider = defineProvider({
   key: "locking-redis",

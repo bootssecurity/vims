@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { initializeVimsApp } from "@vims/vims/loaders";
-import { buildCorsOrigins, isCorsAllowed, handlePostgresError } from "@vims/utils";
+import { parseCorsOrigins, isCorsAllowed, handlePostgresError } from "@vims/utils";
 
 export async function startCommand(options: { port: string }) {
   const port = parseInt(options.port, 10) || 9000;
@@ -9,7 +9,7 @@ export async function startCommand(options: { port: string }) {
   console.log(`Starting VIMS Backend on port ${port}...`);
 
   const app = express();
-  const allowedOrigins = buildCorsOrigins();
+  const allowedOrigins = parseCorsOrigins(process.env.ADMIN_CORS || "http://localhost:7000");
 
   app.use(cors({
     origin: (origin, callback) => {

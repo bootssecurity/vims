@@ -1,6 +1,6 @@
 import { MikroORM, Options, Entity } from "@mikro-orm/core";
 import { PostgreSqlDriver } from "@mikro-orm/postgresql";
-import { BaseEntity } from "./base-entity";
+import { BaseEntity } from "./base-entity.js";
 
 @Entity()
 class DummyEntity extends BaseEntity {

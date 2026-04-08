@@ -6,10 +6,10 @@ export {
   defineModule,
   defineProvider,
   discoverManifest,
-} from "./runtime";
+} from "./runtime.js";
 export type {
   VimsFrameworkCatalog,
   VimsFrameworkManifest,
   VimsModuleDefinition,
   VimsProviderDefinition,
-} from "./runtime";
+} from "./runtime.js";

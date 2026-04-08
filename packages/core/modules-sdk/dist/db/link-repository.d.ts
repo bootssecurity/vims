@@ -1,4 +1,4 @@
-import type { linkPivots, InsertLinkPivot, SelectLinkPivot } from "./link-pivot-schema";
+import type { linkPivots, InsertLinkPivot, SelectLinkPivot } from "./link-pivot-schema.js";
 type DrizzleDb = {
     insert: (table: typeof linkPivots) => {
         values: (data: InsertLinkPivot | InsertLinkPivot[]) => {

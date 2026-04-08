@@ -1,4 +1,4 @@
-import { RedisLocking } from "./locking";
+import { RedisLocking } from "./locking.js";
 export declare const redisLockingProvider: import("@vims/framework").VimsProviderDefinition<{
     key: string;
     locking: RedisLocking;

@@ -1,4 +1,4 @@
-import { loadVimsInternalModule } from "./utils/index";
+import { loadVimsInternalModule } from "./utils/index.js";
 /**
  * Orchestrates loading of all resolved modules into the shared container.
  *
