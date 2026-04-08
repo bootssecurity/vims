@@ -20,7 +20,6 @@ export type VimsModuleLoaderArgs = {
 
 /**
  * Orchestrates loading of all resolved modules into the shared container.
- * Mirrors Medusa's `moduleLoader()` in @medusajs/modules-sdk.
  *
  * - Skips disabled resolutions (resolutionPath === false)
  * - Dispatches each resolution to `loadVimsInternalModule`

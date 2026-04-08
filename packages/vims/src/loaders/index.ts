@@ -11,7 +11,6 @@ import { discoverWorkspaceManifest } from "../generated/workspace-catalog";
 /**
  * Declarative module config — what apps pass to `loadVimsAppModules()`.
  * Maps a module key to its declaration (resolve path + options) or false to disable.
- * Mirrors Medusa's `MedusaModuleConfig`.
  */
 export type VimsModuleConfig = Record<
   string,
@@ -32,7 +31,6 @@ export async function loadVimsApp(overrides: Partial<VimsAppConfig> = {}) {
 
 /**
  * Bootstraps modules from a declarative config map.
- * Mirrors Medusa's `loadModules()` in @medusajs/modules-sdk.
  *
  * Usage:
  * ```ts
@@ -68,3 +66,28 @@ export async function loadVimsAppModules(
 
   return allModules;
 }
+
+export { initializeVimsApp } from "./app";
+export type { VimsAppInitOptions, VimsAppOutput } from "./app";
+export { LinkLoader } from "./link-loader";
+export { ApiLoader } from "./api-loader";
+export type {
+  LoadedVimsRoute,
+  VimsRouteHandler,
+  VimsMiddlewareHandler,
+  VimsRequest,
+  VimsResponse,
+  VimsRouter,
+  HttpMethod,
+} from "./api-loader";
+export {
+  VimsMiddlewarePipeline,
+  requestLogger,
+  attachState,
+  guard,
+} from "./middleware-pipeline";
+export type {
+  PipelineContext,
+  PipelineMiddleware,
+  MiddlewareBuilderFn,
+} from "./middleware-pipeline";

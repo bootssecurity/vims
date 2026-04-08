@@ -1,11 +1,19 @@
 import { loadVimsConfig } from "@vims/config";
 import { createContainer } from "@vims/container";
 import { createLogger } from "@vims/logger";
-// ── Module key constants (parallel to Medusa's `Modules` enum) ──────────────
+// ── Module key constants  ──────────────
 export const VimsModules = {
     EVENT_BUS: "eventBus",
     CACHE: "cache",
     WORKFLOW_ENGINE: "workflowEngine",
+    CRM: "crm",
+    INVENTORY: "inventory",
+    TENANCY: "tenancy",
+    AUDIT: "audit",
+    WEBSITES: "websites",
+    RBAC: "rbac",
+    AUTH: "auth",
+    LOCKING: "locking",
 };
 export function defineModule(definition) {
     return definition;

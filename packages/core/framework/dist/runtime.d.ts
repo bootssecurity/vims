@@ -8,6 +8,14 @@ export declare const VimsModules: {
     readonly EVENT_BUS: "eventBus";
     readonly CACHE: "cache";
     readonly WORKFLOW_ENGINE: "workflowEngine";
+    readonly CRM: "crm";
+    readonly INVENTORY: "inventory";
+    readonly TENANCY: "tenancy";
+    readonly AUDIT: "audit";
+    readonly WEBSITES: "websites";
+    readonly RBAC: "rbac";
+    readonly AUTH: "auth";
+    readonly LOCKING: "locking";
 };
 export type VimsModuleKey = (typeof VimsModules)[keyof typeof VimsModules];
 export type VimsModuleDeclaration = {

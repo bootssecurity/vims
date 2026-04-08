@@ -47,7 +47,6 @@ function simpleHash(obj: unknown): string {
 
 /**
  * Singleton bootstrapper for VIMS modules.
- * Mirrors Medusa's `MedusaModule` class in @medusajs/modules-sdk.
  *
  * Responsibilities:
  *  - Resolve module declarations → VimsModuleResolution via registerVimsModule()
@@ -147,7 +146,6 @@ export class VimsModule {
 
   /**
    * Bootstrap a **single** module. Returns the loaded service map.
-   * Mirrors `MedusaModule.bootstrap()`.
    */
   public static async bootstrap(
     options: VimsModuleBootstrapOptions
@@ -160,7 +158,6 @@ export class VimsModule {
 
   /**
    * Bootstrap **multiple** modules in parallel.
-   * Mirrors `MedusaModule.bootstrapAll()`.
    */
   public static async bootstrapAll(
     modulesOptions: VimsModuleBootstrapOptions[],

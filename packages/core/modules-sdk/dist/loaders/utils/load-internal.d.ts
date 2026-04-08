@@ -16,19 +16,34 @@ export type LoadInternalArgs = {
     logger?: MinimalLogger;
 };
 /**
- * Wires a single resolved module into the shared container.
- * Mirrors Medusa's `loadInternalModule()` in @medusajs/modules-sdk.
+ * DrizzleSchemaEntry
  *
- * Design:
- *  - Creates a scoped `localContainer` so the module can resolve its peer
- *    dependencies (declared in `resolution.dependencies`) without polluting the
- *    shared container registry directly.
- *  - Calls the module definition's `register()` function to obtain the service
- *    instance (or object), then registers that under the module's key.
- *  - Intentionally does NOT do file-system auto-discovery (models/services/repos)
- *    — that will be added in a future phase when ORM support arrives.
+ * A schema table exported from a module's `src/db/schema.ts`.
+ * Vims modules use Drizzle ORM — each schema file exports named
+ * `pgTable` instances.
+ */
+export type DrizzleSchemaEntry = {
+    name: string;
+    [key: string]: unknown;
+};
+export type DiscoveredSchema = {
+    moduleKey: string;
+    schemaPath: string;
+    tables: Record<string, DrizzleSchemaEntry>;
+};
+/**
+ * Wires a single resolved module into the shared container.
+ *
+ * Steps:
+ *  1. Build a scoped `localContainer` (peer-dep resolution proxy)
+ *  2. Validate declared dependencies are present
+ *  3. Run ORM auto-discovery (schema + migrations) — non-blocking
+ *  4. Call module's `register()` to obtain the service instance
+ *  5. Register service under the module's canonical key
+ *  6. Register discovered schema under `schema:<key>` for query layers
  */
 export declare function loadVimsInternalModule({ container, resolution, logger, }: LoadInternalArgs): Promise<{
     error?: Error;
+    schema?: DiscoveredSchema;
 } | void>;
 export {};

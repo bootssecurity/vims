@@ -13,7 +13,6 @@ export type RegisterVimsModuleArgs = {
 };
 /**
  * Resolves a module key + declaration into a `VimsModuleResolution`.
- * Mirrors Medusa's `registerMedusaModule()` in @medusajs/modules-sdk.
  *
  * Priority:
  *  1. If `moduleDeclaration === false` → disabled, returns { resolutionPath: false }

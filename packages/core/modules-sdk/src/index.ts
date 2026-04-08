@@ -10,10 +10,30 @@ export type ModuleLinkDefinition = {
   source: string;
   target: string;
   relationship: "one-to-one" | "one-to-many" | "many-to-many";
+  /** FK field name on the source side */
+  sourceKey?: string;
+  /** FK field name on the target side */
+  targetKey?: string;
+  /** If true, deleting a source record will cascade-delete linked target records */
+  deleteCascade?: boolean;
+  /** Extra metadata provided by the link author */
+  metadata?: Record<string, unknown>;
 };
 
-export function createModuleLink(definition: ModuleLinkDefinition) {
-  return definition;
+export type VimsLinkRegistration = ModuleLinkDefinition & {
+  /** Stable composite key derived from source + target + keys */
+  linkId: string;
+};
+
+/** Global in-memory link registry — accumulated as link files are loaded */
+export const VimsLinkRegistry: Map<string, VimsLinkRegistration> = new Map();
+
+export function createModuleLink(definition: ModuleLinkDefinition): VimsLinkRegistration {
+  const { source, target, sourceKey = "id", targetKey = "id" } = definition;
+  const linkId = [source, sourceKey, target, targetKey].join("<>");
+  const registration: VimsLinkRegistration = { ...definition, sourceKey, targetKey, linkId };
+  VimsLinkRegistry.set(linkId, registration);
+  return registration;
 }
 
 export function createModuleDefinition<T>(
@@ -40,3 +60,6 @@ export function createPluginDefinition<
 export * from "./loaders/index";
 export * from "./vims-module";
 export * from "./definitions";
+export * from "./link";
+export * from "./remote-query";
+export type { DiscoveredSchema } from "./loaders/utils/load-internal";

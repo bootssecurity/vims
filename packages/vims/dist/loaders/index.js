@@ -14,7 +14,6 @@ export async function loadVimsApp(overrides = {}) {
 }
 /**
  * Bootstraps modules from a declarative config map.
- * Mirrors Medusa's `loadModules()` in @medusajs/modules-sdk.
  *
  * Usage:
  * ```ts
@@ -42,3 +41,7 @@ export async function loadVimsAppModules(modulesConfig, opts = {}) {
     }
     return allModules;
 }
+export { initializeVimsApp } from "./app";
+export { LinkLoader } from "./link-loader";
+export { ApiLoader } from "./api-loader";
+export { VimsMiddlewarePipeline, requestLogger, attachState, guard, } from "./middleware-pipeline";

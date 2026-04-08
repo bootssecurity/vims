@@ -1,7 +1,6 @@
 import { defineModule, VimsModules, } from "@vims/framework";
 /**
  * Static registry of first-party VIMS modules.
- * Mirrors Medusa's `ModulesDefinition` in @medusajs/modules-sdk.
  *
  * Each entry declares:
  *  - key:                    canonical lookup key
@@ -14,6 +13,7 @@ import { defineModule, VimsModules, } from "@vims/framework";
  *  - register:               placeholder — real impl comes from the resolved package
  */
 export const VimsModulesDefinition = {
+    // ── Infrastructure ─────────────────────────────────────────────────────────
     [VimsModules.EVENT_BUS]: defineModule({
         key: VimsModules.EVENT_BUS,
         label: "EventBus",
@@ -27,8 +27,8 @@ export const VimsModulesDefinition = {
         key: VimsModules.CACHE,
         label: "Cache",
         owner: "@vims/cache",
-        isRequired: true,
-        defaultPackage: "@vims/cache",
+        isRequired: false,
+        defaultPackage: "@vims/cache-redis",
         defaultModuleDeclaration: { scope: "internal" },
         dependsOn: [VimsModules.EVENT_BUS],
         register: () => ({}),
@@ -36,9 +36,90 @@ export const VimsModulesDefinition = {
     [VimsModules.WORKFLOW_ENGINE]: defineModule({
         key: VimsModules.WORKFLOW_ENGINE,
         label: "WorkflowEngine",
-        owner: "@vims/workflow-engine",
+        owner: "@vims/workflows-sdk",
+        isRequired: false,
+        defaultPackage: "@vims/workflows-sdk",
+        defaultModuleDeclaration: { scope: "internal" },
+        dependsOn: [VimsModules.EVENT_BUS],
+        register: () => ({}),
+    }),
+    [VimsModules.LOCKING]: defineModule({
+        key: VimsModules.LOCKING,
+        label: "Locking",
+        owner: "@vims/locking",
         isRequired: false,
         defaultPackage: false,
+        defaultModuleDeclaration: { scope: "internal" },
+        register: () => ({}),
+    }),
+    // ── Identity & Access ───────────────────────────────────────────────────────
+    [VimsModules.TENANCY]: defineModule({
+        key: VimsModules.TENANCY,
+        label: "Tenancy",
+        owner: "@vims/tenancy",
+        isRequired: true,
+        defaultPackage: "@vims/tenancy",
+        defaultModuleDeclaration: { scope: "internal" },
+        dependsOn: [VimsModules.EVENT_BUS],
+        register: () => ({}),
+    }),
+    [VimsModules.AUTH]: defineModule({
+        key: VimsModules.AUTH,
+        label: "Auth",
+        owner: "@vims/auth",
+        isRequired: false,
+        defaultPackage: "@vims/auth",
+        defaultModuleDeclaration: { scope: "internal" },
+        dependsOn: [VimsModules.TENANCY],
+        register: () => ({}),
+    }),
+    [VimsModules.RBAC]: defineModule({
+        key: VimsModules.RBAC,
+        label: "RBAC",
+        owner: "@vims/rbac",
+        isRequired: false,
+        defaultPackage: "@vims/rbac",
+        defaultModuleDeclaration: { scope: "internal" },
+        dependsOn: [VimsModules.TENANCY, VimsModules.AUTH],
+        register: () => ({}),
+    }),
+    // ── Domain ──────────────────────────────────────────────────────────────────
+    [VimsModules.INVENTORY]: defineModule({
+        key: VimsModules.INVENTORY,
+        label: "Inventory",
+        owner: "@vims/inventory",
+        isRequired: false,
+        defaultPackage: "@vims/inventory",
+        defaultModuleDeclaration: { scope: "internal" },
+        dependsOn: [VimsModules.TENANCY, VimsModules.EVENT_BUS],
+        register: () => ({}),
+    }),
+    [VimsModules.CRM]: defineModule({
+        key: VimsModules.CRM,
+        label: "CRM",
+        owner: "@vims/crm",
+        isRequired: false,
+        defaultPackage: "@vims/crm",
+        defaultModuleDeclaration: { scope: "internal" },
+        dependsOn: [VimsModules.TENANCY, VimsModules.INVENTORY, VimsModules.EVENT_BUS],
+        register: () => ({}),
+    }),
+    [VimsModules.WEBSITES]: defineModule({
+        key: VimsModules.WEBSITES,
+        label: "Websites",
+        owner: "@vims/websites",
+        isRequired: false,
+        defaultPackage: "@vims/websites",
+        defaultModuleDeclaration: { scope: "internal" },
+        dependsOn: [VimsModules.TENANCY, VimsModules.EVENT_BUS],
+        register: () => ({}),
+    }),
+    [VimsModules.AUDIT]: defineModule({
+        key: VimsModules.AUDIT,
+        label: "Audit",
+        owner: "@vims/audit",
+        isRequired: false,
+        defaultPackage: "@vims/audit",
         defaultModuleDeclaration: { scope: "internal" },
         dependsOn: [VimsModules.EVENT_BUS],
         register: () => ({}),

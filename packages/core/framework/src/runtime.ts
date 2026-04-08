@@ -8,11 +8,19 @@ export type VimsAppConfig = VimsRuntimeConfig;
 
 export type VimsServiceMap = Record<string, unknown>;
 
-// ── Module key constants (parallel to Medusa's `Modules` enum) ──────────────
+// ── Module key constants  ──────────────
 export const VimsModules = {
   EVENT_BUS: "eventBus",
   CACHE: "cache",
   WORKFLOW_ENGINE: "workflowEngine",
+  CRM: "crm",
+  INVENTORY: "inventory",
+  TENANCY: "tenancy",
+  AUDIT: "audit",
+  WEBSITES: "websites",
+  RBAC: "rbac",
+  AUTH: "auth",
+  LOCKING: "locking",
 } as const;
 
 export type VimsModuleKey = (typeof VimsModules)[keyof typeof VimsModules];
@@ -196,38 +204,38 @@ export function discoverManifest(
 
   const modules = resolvedConfig.enabledModules?.length
     ? resolvedConfig.enabledModules.map((moduleKey) => {
-        const moduleDefinition = catalog.modules[moduleKey];
+      const moduleDefinition = catalog.modules[moduleKey];
 
-        if (!moduleDefinition) {
-          throw new Error(`Unknown configured module "${moduleKey}"`);
-        }
+      if (!moduleDefinition) {
+        throw new Error(`Unknown configured module "${moduleKey}"`);
+      }
 
-        return moduleDefinition;
-      })
+      return moduleDefinition;
+    })
     : Object.values(catalog.modules);
 
   const providers = resolvedConfig.enabledProviders?.length
     ? resolvedConfig.enabledProviders.map((providerKey) => {
-        const providerDefinition = catalog.providers[providerKey];
+      const providerDefinition = catalog.providers[providerKey];
 
-        if (!providerDefinition) {
-          throw new Error(`Unknown configured provider "${providerKey}"`);
-        }
+      if (!providerDefinition) {
+        throw new Error(`Unknown configured provider "${providerKey}"`);
+      }
 
-        return providerDefinition;
-      })
+      return providerDefinition;
+    })
     : Object.values(catalog.providers);
 
   const plugins = resolvedConfig.enabledPlugins?.length
     ? resolvedConfig.enabledPlugins.map((pluginKey) => {
-        const pluginDefinition = catalog.plugins[pluginKey];
+      const pluginDefinition = catalog.plugins[pluginKey];
 
-        if (!pluginDefinition) {
-          throw new Error(`Unknown configured plugin "${pluginKey}"`);
-        }
+      if (!pluginDefinition) {
+        throw new Error(`Unknown configured plugin "${pluginKey}"`);
+      }
 
-        return pluginDefinition;
-      })
+      return pluginDefinition;
+    })
     : Object.values(catalog.plugins);
 
   return createFrameworkManifest({

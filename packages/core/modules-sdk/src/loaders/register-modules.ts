@@ -18,7 +18,6 @@ export type RegisterVimsModuleArgs = {
 
 /**
  * Resolves a module key + declaration into a `VimsModuleResolution`.
- * Mirrors Medusa's `registerMedusaModule()` in @medusajs/modules-sdk.
  *
  * Priority:
  *  1. If `moduleDeclaration === false` → disabled, returns { resolutionPath: false }
@@ -63,7 +62,7 @@ export function registerVimsModule({
   if (!modDef) {
     throw new Error(
       `Module "${moduleKey}" is not a known built-in module and no definition was supplied. ` +
-        `Pass a "definition" option or use a key from VimsModules.`
+      `Pass a "definition" option or use a key from VimsModules.`
     );
   }
 

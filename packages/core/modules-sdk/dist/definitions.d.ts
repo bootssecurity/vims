@@ -1,7 +1,6 @@
 import { type VimsModuleDefinition } from "@vims/framework";
 /**
  * Static registry of first-party VIMS modules.
- * Mirrors Medusa's `ModulesDefinition` in @medusajs/modules-sdk.
  *
  * Each entry declares:
  *  - key:                    canonical lookup key

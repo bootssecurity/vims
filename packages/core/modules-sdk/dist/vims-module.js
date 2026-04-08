@@ -12,7 +12,6 @@ function simpleHash(obj) {
 // ── VimsModule singleton ───────────────────────────────────────────────────────
 /**
  * Singleton bootstrapper for VIMS modules.
- * Mirrors Medusa's `MedusaModule` class in @medusajs/modules-sdk.
  *
  * Responsibilities:
  *  - Resolve module declarations → VimsModuleResolution via registerVimsModule()
@@ -81,7 +80,6 @@ export class VimsModule {
     // ── Bootstrap ───────────────────────────────────────────────────────────────
     /**
      * Bootstrap a **single** module. Returns the loaded service map.
-     * Mirrors `MedusaModule.bootstrap()`.
      */
     static async bootstrap(options) {
         const [service] = await VimsModule.bootstrap_([options], {
@@ -91,7 +89,6 @@ export class VimsModule {
     }
     /**
      * Bootstrap **multiple** modules in parallel.
-     * Mirrors `MedusaModule.bootstrapAll()`.
      */
     static async bootstrapAll(modulesOptions, opts = {}) {
         return VimsModule.bootstrap_(modulesOptions, opts);

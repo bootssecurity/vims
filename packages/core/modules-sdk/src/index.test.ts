@@ -10,6 +10,8 @@ import {
   VimsModule,
   VimsModulesDefinition,
   vimsModuleLoader,
+  VimsLinkRegistry,
+  Link,
 } from "./index";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -148,9 +150,9 @@ describe("@vims/modules-sdk", () => {
       expect(VimsModulesDefinition["eventBus"].isRequired).toBe(true);
     });
 
-    it("marks workflowEngine as not required with no default package", () => {
+    it("marks workflowEngine as not required", () => {
       expect(VimsModulesDefinition["workflowEngine"].isRequired).toBe(false);
-      expect(VimsModulesDefinition["workflowEngine"].defaultPackage).toBe(false);
+      expect(VimsModulesDefinition["workflowEngine"].defaultPackage).toBe("@vims/workflows-sdk");
     });
   });
 
@@ -312,5 +314,156 @@ describe("@vims/modules-sdk", () => {
 
       expect(VimsModule.getAllModuleResolutions().length).toBe(before + 1);
     });
+  });
+});
+
+// ── createModuleLink + VimsLinkRegistry ───────────────────────────────────────
+
+describe("createModuleLink() + VimsLinkRegistry", () => {
+  afterEach(() => {
+    VimsLinkRegistry.clear();
+  });
+
+  it("returns a registration with a stable linkId", () => {
+    const link = createModuleLink({
+      source: "crm",
+      target: "inventory",
+      relationship: "one-to-many",
+    });
+
+    expect(link.linkId).toBe("crm<>id<>inventory<>id");
+    expect(link.sourceKey).toBe("id");
+    expect(link.targetKey).toBe("id");
+  });
+
+  it("registers the link in VimsLinkRegistry", () => {
+    createModuleLink({
+      source: "audit",
+      target: "crm",
+      relationship: "one-to-one",
+      sourceKey: "event_id",
+      targetKey: "deal_id",
+    });
+
+    expect(VimsLinkRegistry.size).toBe(1);
+    const entry = VimsLinkRegistry.get("audit<>event_id<>crm<>deal_id");
+    expect(entry).toBeDefined();
+    expect(entry?.relationship).toBe("one-to-one");
+  });
+
+  it("deduplicates links with the same linkId", () => {
+    const link1 = createModuleLink({ source: "a", target: "b", relationship: "one-to-many" });
+    const link2 = createModuleLink({ source: "a", target: "b", relationship: "one-to-many" });
+
+    // Both calls → same linkId → only 1 entry in registry
+    expect(VimsLinkRegistry.size).toBe(1);
+    expect(link1.linkId).toBe(link2.linkId);
+  });
+
+  it("supports deleteCascade and metadata fields", () => {
+    const link = createModuleLink({
+      source: "websites",
+      target: "tenancy",
+      relationship: "many-to-many",
+      deleteCascade: true,
+      metadata: { priority: 1 },
+    });
+
+    expect(link.deleteCascade).toBe(true);
+    expect(link.metadata?.priority).toBe(1);
+  });
+});
+
+// ── Link class ────────────────────────────────────────────────────────────────
+
+describe("Link class", () => {
+  afterEach(() => {
+    VimsLinkRegistry.clear();
+  });
+
+  function setup() {
+    // Register two test link definitions
+    createModuleLink({ source: "crm", target: "inventory", relationship: "one-to-many", deleteCascade: true });
+    createModuleLink({ source: "audit", target: "crm", relationship: "one-to-one", deleteCascade: false });
+    return new Link(VimsLinkRegistry);
+  }
+
+  it("create() adds link entries", async () => {
+    const link = setup();
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+
+    const rows = link.dump();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].source).toBe("deal-1");
+    expect(rows[0].target).toBe("prod-1");
+  });
+
+  it("create() supports batch input", async () => {
+    const link = setup();
+    await link.create([
+      { crm: { id: "deal-1" }, inventory: { id: "prod-1" } },
+      { crm: { id: "deal-1" }, inventory: { id: "prod-2" } },
+    ]);
+    expect(link.dump()).toHaveLength(2);
+  });
+
+  it("dismiss() removes specific links", async () => {
+    const link = setup();
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-2" } });
+    await link.dismiss({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+
+    const rows = link.dump();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].target).toBe("prod-2");
+  });
+
+  it("list() returns matching links", async () => {
+    const link = setup();
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+    await link.create({ crm: { id: "deal-2" }, inventory: { id: "prod-2" } });
+
+    const results = await link.list({ crm: { id: "deal-1" } });
+    expect(results).toHaveLength(1);
+    expect(results[0].source).toBe("deal-1");
+    expect(results[0].target).toBe("prod-1");
+  });
+
+  it("delete() removes source links and returns cascade metadata", async () => {
+    const link = setup();
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-1" } });
+    await link.create({ crm: { id: "deal-1" }, inventory: { id: "prod-2" } });
+
+    const result = await link.delete({ crm: { id: ["deal-1"] } });
+    expect(link.dump()).toHaveLength(0);
+
+    // cascade metadata should include the linked inventory records
+    expect(result.affected.inventory).toBeDefined();
+    expect(result.affected.inventory.id).toContain("prod-1");
+    expect(result.affected.inventory.id).toContain("prod-2");
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("delete() without deleteCascade does not return cascade metadata", async () => {
+    const link = setup();
+    await link.create({ audit: { id: "evt-1" }, crm: { id: "deal-1" } });
+    const result = await link.delete({ audit: { id: ["evt-1"] } });
+
+    // audit→crm has deleteCascade: false → no cascade metadata
+    expect(result.affected).toEqual({});
+  });
+
+  it("restore() is a no-op that returns empty result", async () => {
+    const link = setup();
+    const result = await link.restore({ crm: { id: ["deal-1"] } });
+    expect(result.affected).toEqual({});
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("throws when creating link between unregistered modules", async () => {
+    const link = setup();
+    await expect(
+      link.create({ unknown: { id: "x" }, also_unknown: { id: "y" } })
+    ).rejects.toThrow();
   });
 });
