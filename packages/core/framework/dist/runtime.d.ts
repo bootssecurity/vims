@@ -4,6 +4,30 @@ import { createLogger } from "@vims/logger";
 export type VimsProviderCategory = "cache" | "database" | "events" | "search";
 export type VimsAppConfig = VimsRuntimeConfig;
 export type VimsServiceMap = Record<string, unknown>;
+export declare const VimsModules: {
+    readonly EVENT_BUS: "eventBus";
+    readonly CACHE: "cache";
+    readonly WORKFLOW_ENGINE: "workflowEngine";
+};
+export type VimsModuleKey = (typeof VimsModules)[keyof typeof VimsModules];
+export type VimsModuleDeclaration = {
+    /** Package name or local path to resolve */
+    resolve?: string;
+    options?: Record<string, unknown>;
+    scope?: "internal" | "external";
+    /** Set to true to disable the module without removing it from config */
+    disabled?: boolean;
+};
+export type VimsModuleResolution = {
+    /** Absolute path after require.resolve(), or false when disabled */
+    resolutionPath: string | false;
+    definition: VimsModuleDefinition;
+    dependencies: string[];
+    options: Record<string, unknown>;
+    moduleDeclaration: {
+        scope: "internal" | "external";
+    };
+};
 export type VimsProviderRuntimeContext = {
     config: VimsAppConfig;
 };
@@ -50,6 +74,14 @@ export type VimsModuleDefinition<T = unknown> = {
     label: string;
     owner: string;
     dependsOn?: string[];
+    /** Whether the framework refuses to boot without this module */
+    isRequired?: boolean;
+    /** Default npm package or workspace path for the built-in implementation. false = no default. */
+    defaultPackage?: string | false;
+    /** Scope used when app config doesn't specify one */
+    defaultModuleDeclaration?: {
+        scope: "internal" | "external";
+    };
     register: (context: VimsModuleRuntimeContext) => T;
 } & VimsLifecycleDefinition;
 export type VimsPluginDefinition<TRuntime = unknown, TExtra extends Record<string, unknown> = Record<string, never>> = {

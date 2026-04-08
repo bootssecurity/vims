@@ -89,6 +89,12 @@ export type VimsModuleDefinition<T = unknown> = {
   label: string;
   owner: string;
   dependsOn?: string[];
+  /** Whether the framework refuses to boot without this module */
+  isRequired?: boolean;
+  /** Default npm package or workspace path for the built-in implementation. false = no default. */
+  defaultPackage?: string | false;
+  /** Scope used when app config doesn't specify one */
+  defaultModuleDeclaration?: { scope: "internal" | "external" };
   register: (context: VimsModuleRuntimeContext) => T;
 } & VimsLifecycleDefinition;
 
