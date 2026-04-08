@@ -38,3 +38,5 @@ export function createPluginDefinition<
 }
 
 export * from "./loaders/index";
+export * from "./vims-module";
+export * from "./definitions";

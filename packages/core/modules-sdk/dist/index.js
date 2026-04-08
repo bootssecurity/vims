@@ -12,3 +12,5 @@ export function createPluginDefinition(definition) {
     return definePlugin(definition);
 }
 export * from "./loaders/index";
+export * from "./vims-module";
+export * from "./definitions";

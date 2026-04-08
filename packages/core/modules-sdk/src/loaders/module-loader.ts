@@ -1,5 +1,5 @@
 import type { VimsModuleResolution } from "@vims/framework";
-import { loadVimsInternalModule } from "./utils";
+import { loadVimsInternalModule } from "./utils/index";
 
 export type VimsModuleLoaderArgs = {
   /**

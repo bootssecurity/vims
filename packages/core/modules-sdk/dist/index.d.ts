@@ -9,3 +9,5 @@ export declare function createModuleDefinition<T>(definition: VimsModuleDefiniti
 export declare function createProviderBridge<T>(provider: VimsProviderDefinition<T>): VimsProviderDefinition<T>;
 export declare function createPluginDefinition<TRuntime = unknown, TExtra extends Record<string, unknown> = Record<string, never>>(definition: VimsPluginDefinition<TRuntime, TExtra>): VimsPluginDefinition<TRuntime, TExtra>;
 export * from "./loaders/index";
+export * from "./vims-module";
+export * from "./definitions";
